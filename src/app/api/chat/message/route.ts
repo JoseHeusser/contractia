@@ -191,6 +191,7 @@ async function askClaude(
   question: string,
   chunks: Array<{ content: string; page_start: number | null }>,
   history: Array<{ role: string; content: string }>,
+  noContractsSelected: boolean,
 ): Promise<{ content: string; inputTokens: number; outputTokens: number }> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
@@ -201,17 +202,17 @@ async function askClaude(
     }
   }
 
-  const context =
-    chunks.length > 0
-      ? chunks
-          .map(
-            (c, i) =>
-              `[Fragmento ${i + 1}${c.page_start ? ` — pág. ${c.page_start}` : ''}]\n${c.content}`,
-          )
-          .join('\n\n---\n\n')
-      : null
+  const context = chunks
+    .map((c, i) => `[Fragmento ${i + 1}${c.page_start ? ` — pág. ${c.page_start}` : ''}]\n${c.content}`)
+    .join('\n\n---\n\n')
 
-  const systemPrompt = `Eres el asistente de ContractIA, especializado en contratos de salud chilenos (isapres, seguros complementarios).
+  // When no contracts are selected, use Haiku for a general answer (much cheaper)
+  const model = noContractsSelected ? 'claude-haiku-4-5-20251001' : 'claude-sonnet-4-6'
+  const maxTokens = noContractsSelected ? 512 : 1024
+
+  const systemPrompt = noContractsSelected
+    ? `Eres el asistente de ContractIA, especializado en contratos de salud chilenos (isapres, seguros complementarios). Responde preguntas generales sobre salud en Chile de forma clara y en español. Recomienda al usuario seleccionar un contrato para obtener respuestas específicas sobre sus coberturas.`
+    : `Eres el asistente de ContractIA, especializado en contratos de salud chilenos (isapres, seguros complementarios).
 
 Tu trabajo es responder preguntas del usuario sobre sus contratos de salud de forma clara y en lenguaje simple.
 
@@ -226,7 +227,7 @@ REGLAS:
 
   const userContent = context
     ? `Fragmentos relevantes del contrato:\n\n${context}\n\n---\n\nPregunta: ${question}`
-    : `Pregunta: ${question}\n\n(No se encontraron fragmentos relevantes en el contrato para esta pregunta.)`
+    : `Pregunta: ${question}`
 
   const messages = [
     ...history.slice(-6).map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
@@ -240,12 +241,7 @@ REGLAS:
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages,
-    }),
+    body: JSON.stringify({ model, max_tokens: maxTokens, system: systemPrompt, messages }),
   })
 
   if (!res.ok) {
@@ -334,13 +330,22 @@ export async function POST(request: NextRequest) {
       if (embedding) {
         chunks = await retrieveChunks(embedding, contractIds!)
       }
+
+      // If contracts are selected but no chunks exist yet, the contract is still processing
+      // Don't call Claude — return a free predefined message
+      if (chunks.length === 0) {
+        assistantContent = 'El contrato seleccionado aún no tiene fragmentos indexados. Es posible que el procesamiento todavía esté en curso. Intenta nuevamente en unos minutos o verifica que el contrato esté en estado **listo** desde la sección Contratos.'
+        answerSource = 'no_context'
+      }
     }
 
-    const ragResult = await askClaude(message, chunks, recentHistory)
-    assistantContent = ragResult.content
-    inputTokens = ragResult.inputTokens
-    outputTokens = ragResult.outputTokens
-    answerSource = hasContracts ? 'rag' : 'no_context'
+    if (!assistantContent) {
+      const ragResult = await askClaude(message, chunks, recentHistory, !hasContracts)
+      assistantContent = ragResult.content
+      inputTokens = ragResult.inputTokens
+      outputTokens = ragResult.outputTokens
+      answerSource = hasContracts ? 'rag' : 'no_context'
+    }
   }
 
   // Save assistant message
