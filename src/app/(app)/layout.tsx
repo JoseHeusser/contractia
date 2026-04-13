@@ -1,17 +1,10 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/Sidebar'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, profile } = await getSession()
   if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, email, role')
-    .eq('id', user.id)
-    .single()
 
   return (
     <div className="flex h-screen bg-gray-50">

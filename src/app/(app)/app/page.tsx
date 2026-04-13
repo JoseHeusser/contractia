@@ -1,29 +1,22 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { getSession } from '@/lib/supabase/server'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { StatusBadge } from '@/components/StatusBadge'
 import { AlertsPanel } from '@/components/AlertsPanel'
 import { DollarSign, FileText, Bell, Shield, ArrowRight, Upload } from 'lucide-react'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { user, profile, supabase } = await getSession()
   if (!user) redirect('/login')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name')
-    .eq('id', user.id)
-    .single()
 
   const [
     { data: contracts },
     { data: alerts },
     { data: benefits },
   ] = await Promise.all([
-    supabase.from('contracts').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('alerts').select('*').eq('user_id', user.id).eq('status', 'open').order('created_at', { ascending: false }),
+    supabase.from('contracts').select('id, contract_display_name, status, provider_name, monthly_cost, monthly_cost_currency').eq('user_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('alerts').select('*').eq('user_id', user.id).eq('status', 'open').order('created_at', { ascending: false }).limit(5),
     supabase.from('benefits').select('id').eq('user_id', user.id),
   ])
 

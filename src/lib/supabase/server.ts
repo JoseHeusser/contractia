@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 import type { Database } from '@/types/database'
 
 export async function createClient() {
@@ -26,3 +27,18 @@ export async function createClient() {
     }
   )
 }
+
+// Cached per-request: layout + page share the same result, no duplicate DB calls
+export const getSession = cache(async () => {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { user: null, profile: null, supabase }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, email, role')
+    .eq('id', user.id)
+    .single()
+
+  return { user, profile, supabase }
+})
