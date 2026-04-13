@@ -161,17 +161,18 @@ async function embedQuery(text: string): Promise<number[] | null> {
 async function retrieveChunks(
   embedding: number[],
   contractIds: string[],
+  userAccessToken: string,
   limit = 5,
 ): Promise<Array<{ id: string; content: string; page_start: number | null }>> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
   const res = await fetch(`${supabaseUrl}/rest/v1/rpc/match_document_chunks`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
+      apikey: supabaseAnonKey,
+      Authorization: `Bearer ${userAccessToken}`,
     },
     body: JSON.stringify({
       query_embedding: `[${embedding.join(',')}]`,
@@ -267,6 +268,9 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
+  const { data: { session } } = await supabase.auth.getSession()
+  const userAccessToken = session?.access_token ?? ''
+
   const body = await request.json()
   const { message, threadId, contractIds } = body as {
     message: string
@@ -328,7 +332,7 @@ export async function POST(request: NextRequest) {
     if (hasContracts) {
       const embedding = await embedQuery(message)
       if (embedding) {
-        chunks = await retrieveChunks(embedding, contractIds!)
+        chunks = await retrieveChunks(embedding, contractIds!, userAccessToken)
       }
 
       // If contracts are selected but no chunks exist yet, the contract is still processing
