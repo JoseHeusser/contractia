@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const ALLOWED_MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/tiff']
-const MAX_SIZE = 50 * 1024 * 1024 // 50MB
+const MAX_SIZE = 50 * 1024 * 1024 // 50MB per file
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -16,14 +16,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Formato inválido' }, { status: 400 })
   }
 
-  const file = formData.get('file') as File | null
+  const filesRaw = formData.getAll('files') as File[]
+  const files = filesRaw.length > 0 ? filesRaw : ([formData.get('file')].filter(Boolean) as File[])
   const name = (formData.get('name') as string | null)?.trim()
   const category = (formData.get('category') as string | null) ?? 'isapre'
 
-  if (!file) return NextResponse.json({ error: 'Archivo requerido' }, { status: 400 })
+  if (!files.length) return NextResponse.json({ error: 'Al menos un archivo es requerido' }, { status: 400 })
   if (!name) return NextResponse.json({ error: 'Nombre requerido' }, { status: 400 })
-  if (!ALLOWED_MIMES.includes(file.type)) return NextResponse.json({ error: 'Tipo de archivo no permitido' }, { status: 400 })
-  if (file.size > MAX_SIZE) return NextResponse.json({ error: 'El archivo supera el límite de 50MB' }, { status: 400 })
+
+  for (const file of files) {
+    if (!ALLOWED_MIMES.includes(file.type)) return NextResponse.json({ error: `Tipo no permitido: ${file.type}` }, { status: 400 })
+    if (file.size > MAX_SIZE) return NextResponse.json({ error: `El archivo "${file.name}" supera 50MB` }, { status: 400 })
+  }
 
   // Create contract row
   const { data: contract, error: contractError } = await supabase
@@ -36,37 +40,45 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Error al crear el contrato' }, { status: 500 })
   }
 
-  // Upload file to storage
-  const fileExt = file.name.split('.').pop() ?? 'pdf'
-  const storagePath = `${user.id}/${contract.id}/original.${fileExt}`
-  const fileBuffer = Buffer.from(await file.arrayBuffer())
+  // Upload all files to storage + create document records
+  const storagePaths: string[] = []
+  const documentIds: string[] = []
 
-  const { error: uploadError } = await supabase.storage
-    .from('contracts')
-    .upload(storagePath, fileBuffer, { contentType: file.type, upsert: false })
+  for (const file of files) {
+    const fileExt = file.name.split('.').pop() ?? 'pdf'
+    const index = storagePaths.length
+    const storagePath = `${user.id}/${contract.id}/original_${index}.${fileExt}`
+    const fileBuffer = Buffer.from(await file.arrayBuffer())
 
-  if (uploadError) {
-    // Rollback contract
-    await supabase.from('contracts').delete().eq('id', contract.id)
-    return NextResponse.json({ error: 'Error al subir el archivo' }, { status: 500 })
-  }
+    const { error: uploadError } = await supabase.storage
+      .from('contracts')
+      .upload(storagePath, fileBuffer, { contentType: file.type, upsert: false })
 
-  // Create document record
-  const { data: document, error: docError } = await supabase
-    .from('contract_documents')
-    .insert({
-      contract_id: contract.id,
-      user_id: user.id,
-      storage_path: storagePath,
-      file_mime: file.type,
-      file_size_bytes: file.size,
-      metadata: { original_name: file.name },
-    })
-    .select('id')
-    .single()
+    if (uploadError) {
+      await supabase.from('contracts').delete().eq('id', contract.id)
+      return NextResponse.json({ error: `Error al subir "${file.name}"` }, { status: 500 })
+    }
 
-  if (docError || !document) {
-    return NextResponse.json({ error: 'Error al registrar el documento' }, { status: 500 })
+    const { data: document, error: docError } = await supabase
+      .from('contract_documents')
+      .insert({
+        contract_id: contract.id,
+        user_id: user.id,
+        storage_path: storagePath,
+        file_mime: file.type,
+        file_size_bytes: file.size,
+        metadata: { original_name: file.name, file_index: index },
+      })
+      .select('id')
+      .single()
+
+    if (docError || !document) {
+      await supabase.from('contracts').delete().eq('id', contract.id)
+      return NextResponse.json({ error: 'Error al registrar el documento' }, { status: 500 })
+    }
+
+    storagePaths.push(storagePath)
+    documentIds.push(document.id)
   }
 
   // Register event
@@ -74,22 +86,31 @@ export async function POST(request: NextRequest) {
     user_id: user.id,
     contract_id: contract.id,
     event_type: 'upload_completed',
-    payload: { document_id: document.id, file_size: file.size, file_mime: file.type },
+    payload: { document_ids: documentIds, file_count: files.length },
   })
 
-  // Call n8n webhook if configured
+  // Trigger n8n — pass all storage paths so WF1 can process all files
   const webhookUrl = process.env.N8N_WEBHOOK_URL
   if (webhookUrl) {
     try {
       await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, contractId: contract.id, documentId: document.id, storagePath }),
+        body: JSON.stringify({
+          userId: user.id,
+          contractId: contract.id,
+          documentId: documentIds[0],
+          storagePath: storagePaths[0],
+          // Multi-file fields
+          storagePaths,
+          documentIds,
+          fileCount: files.length,
+        }),
       })
     } catch {
-      // Non-fatal — webhook failure doesn't block the response
+      // Non-fatal
     }
   }
 
-  return NextResponse.json({ contractId: contract.id, documentId: document.id })
+  return NextResponse.json({ contractId: contract.id, documentIds })
 }
