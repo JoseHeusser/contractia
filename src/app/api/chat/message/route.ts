@@ -163,7 +163,7 @@ async function retrieveChunks(
   contractIds: string[],
   userAccessToken: string,
   limit = 5,
-): Promise<Array<{ id: string; content: string; page_start: number | null }>> {
+): Promise<Array<{ id: string; document_id: string | null; content: string; page_start: number | null }>> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
@@ -184,6 +184,57 @@ async function retrieveChunks(
   if (!res.ok) return []
   const data = await res.json()
   return Array.isArray(data) ? data : []
+}
+
+// ─── Signed URL generation ────────────────────────────────────────────────────
+
+async function getSignedUrls(
+  documentIds: string[],
+): Promise<Record<string, string>> {
+  if (documentIds.length === 0) return {}
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+  // Fetch storage_path for each document_id
+  const ids = documentIds.join(',')
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/contract_documents?id=in.(${ids})&select=id,storage_path`,
+    {
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+      },
+    },
+  )
+  if (!res.ok) return {}
+  const docs: Array<{ id: string; storage_path: string }> = await res.json()
+
+  // Generate signed URLs (1 hour expiry)
+  const signedUrls: Record<string, string> = {}
+  await Promise.all(
+    docs.map(async (doc) => {
+      const signRes = await fetch(
+        `${supabaseUrl}/storage/v1/object/sign/contracts/${doc.storage_path}`,
+        {
+          method: 'POST',
+          headers: {
+            apikey: serviceKey,
+            Authorization: `Bearer ${serviceKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ expiresIn: 3600 }),
+        },
+      )
+      if (!signRes.ok) return
+      const signData = await signRes.json()
+      const signedUrl = signData.signedURL
+        ? `${supabaseUrl}/storage/v1${signData.signedURL}`
+        : signData.signedUrl ?? null
+      if (signedUrl) signedUrls[doc.id] = signedUrl
+    }),
+  )
+  return signedUrls
 }
 
 // ─── Claude RAG answer ────────────────────────────────────────────────────────
@@ -313,7 +364,7 @@ export async function POST(request: NextRequest) {
   let assistantContent = ''
   let inputTokens = 0
   let outputTokens = 0
-  let chunks: Array<{ content: string; page_start: number | null; id: string }> = []
+  let chunks: Array<{ id: string; document_id: string | null; content: string; page_start: number | null }> = []
   let answerSource: 'sql' | 'rag' | 'no_context' = 'no_context'
 
   const hasContracts = contractIds && contractIds.length > 0
@@ -349,6 +400,21 @@ export async function POST(request: NextRequest) {
       inputTokens = ragResult.inputTokens
       outputTokens = ragResult.outputTokens
       answerSource = hasContracts ? 'rag' : 'no_context'
+
+      // Inject signed PDF links into [Fragmento N] references
+      if (chunks.length > 0) {
+        const uniqueDocIds = [...new Set(chunks.map((c) => c.document_id).filter(Boolean) as string[])]
+        const signedUrls = await getSignedUrls(uniqueDocIds)
+        assistantContent = assistantContent.replace(
+          /\[Fragmento (\d+)([^\]]*)\]/g,
+          (match, numStr, rest) => {
+            const idx = parseInt(numStr, 10) - 1
+            const docId = chunks[idx]?.document_id
+            const url = docId ? signedUrls[docId] : null
+            return url ? `[Fragmento ${numStr}${rest}](${url})` : match
+          },
+        )
+      }
     }
   }
 
