@@ -11,6 +11,7 @@ import {
   MessageCircle, AlertTriangle, TrendingUp, Phone, Mail, Globe,
   Calendar, DollarSign, User, RefreshCw, ExternalLink, Info
 } from 'lucide-react'
+import { DeleteContractButton } from '@/components/DeleteContractButton'
 
 const PROCESSING_STATUSES = ['uploaded', 'ocr_processing', 'ocr_done', 'extracting']
 
@@ -57,13 +58,16 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
             <p className="text-gray-500 mt-0.5">{contract.provider_name}</p>
           )}
         </div>
-        <Link
-          href={`/app/chat?contractId=${id}`}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors flex-shrink-0"
-        >
-          <MessageCircle className="h-4 w-4" />
-          Consultar al asistente
-        </Link>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <DeleteContractButton contractId={id} />
+          <Link
+            href={`/app/chat?contractId=${id}`}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Consultar al asistente
+          </Link>
+        </div>
       </div>
 
       {/* Processing state */}
