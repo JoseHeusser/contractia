@@ -219,6 +219,48 @@ export type Database = {
         }
         Relationships: []
       }
+      document_chunks: {
+        Row: {
+          chunk_index: number | null
+          content: string
+          contract_id: string
+          created_at: string
+          document_id: string | null
+          embedding: string | null
+          id: string
+          page_end: number | null
+          page_start: number | null
+          token_count: number | null
+          user_id: string
+        }
+        Insert: {
+          chunk_index?: number | null
+          content: string
+          contract_id: string
+          created_at?: string
+          document_id?: string | null
+          embedding?: string | null
+          id?: string
+          page_end?: number | null
+          page_start?: number | null
+          token_count?: number | null
+          user_id: string
+        }
+        Update: {
+          chunk_index?: number | null
+          content?: string
+          contract_id?: string
+          created_at?: string
+          document_id?: string | null
+          embedding?: string | null
+          id?: string
+          page_end?: number | null
+          page_start?: number | null
+          token_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       contracts: {
         Row: {
           ai_summary_simple: string | null

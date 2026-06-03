@@ -42,6 +42,7 @@ export async function DELETE(
     supabase.from('benefits').delete().eq('contract_id', id),
     supabase.from('alerts').delete().eq('contract_id', id),
     supabase.from('evidence_snippets').delete().eq('contract_id', id),
+    supabase.from('document_chunks').delete().eq('contract_id', id),
     supabase.from('events').delete().eq('contract_id', id),
   ])
   await supabase.from('contract_documents').delete().eq('contract_id', id)

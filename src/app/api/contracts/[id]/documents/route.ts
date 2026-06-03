@@ -80,6 +80,15 @@ export async function POST(
     index++
   }
 
+  // Limpiar filas derivadas antes de reprocesar para evitar DUPLICADOS
+  // (WF1 las regenera desde cero). NO se borran los documentos ni el contrato.
+  await Promise.all([
+    supabase.from('benefits').delete().eq('contract_id', id),
+    supabase.from('alerts').delete().eq('contract_id', id),
+    supabase.from('evidence_snippets').delete().eq('contract_id', id),
+    supabase.from('document_chunks').delete().eq('contract_id', id),
+  ])
+
   // Volver a estado de procesamiento para re-analizar el contrato completo
   await supabase.from('contracts').update({ status: 'uploaded' }).eq('id', id)
 
