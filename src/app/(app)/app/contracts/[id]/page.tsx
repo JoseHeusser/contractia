@@ -4,14 +4,17 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { ProcessingStatus } from '@/components/ProcessingStatus'
 import { BenefitsList } from '@/components/BenefitsList'
 import { EvidencePopover } from '@/components/EvidencePopover'
-import { formatCurrency, formatDate, categoryLabel } from '@/lib/utils'
+import { CollapsibleSection } from '@/components/CollapsibleSection'
+import { formatCurrency, formatDate, categoryLabel, sanitizeAlerts } from '@/lib/utils'
 import Link from 'next/link'
 import type { Tables } from '@/types/database'
 import {
   MessageCircle, AlertTriangle, TrendingUp, Phone, Mail, Globe,
-  Calendar, DollarSign, User, RefreshCw, ExternalLink, Info
+  Calendar, DollarSign, User, RefreshCw, Info
 } from 'lucide-react'
 import { DeleteContractButton } from '@/components/DeleteContractButton'
+import { EditContractButton } from '@/components/EditContractButton'
+import { AddDocumentButton } from '@/components/AddDocumentButton'
 
 const PROCESSING_STATUSES = ['uploaded', 'ocr_processing', 'ocr_done', 'extracting']
 
@@ -58,8 +61,10 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
             <p className="text-gray-500 mt-0.5">{contract.provider_name}</p>
           )}
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
           <DeleteContractButton contractId={id} />
+          <AddDocumentButton contractId={id} />
+          {isReady && <EditContractButton contract={contract} />}
           <Link
             href={`/app/chat?contractId=${id}`}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
@@ -78,9 +83,11 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
       )}
 
       {/* Alerts */}
-      {alerts && alerts.length > 0 && (
+      {(() => {
+        const visibleAlerts = sanitizeAlerts(alerts)
+        return visibleAlerts.length > 0 && (
         <div className="mb-6 space-y-2">
-          {alerts.map((alert: Alert) => (
+          {visibleAlerts.map((alert: Alert) => (
             <div key={alert.id} className={`flex items-start gap-3 rounded-xl border p-4 ${
               alert.severity === 'high' ? 'bg-red-50 border-red-100' :
               alert.severity === 'med' ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'
@@ -96,7 +103,8 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
             </div>
           ))}
         </div>
-      )}
+        )
+      })()}
 
       {isReady && (
         <ContractTabs contract={contract} benefits={benefits ?? []} getSnippet={getSnippet} />
@@ -115,11 +123,9 @@ function ContractTabs({
   getSnippet: (key: string) => EvidenceSnippet | null
 }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {/* Summary */}
-      <section className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Resumen</h2>
-
+      <CollapsibleSection title="Resumen" defaultOpen>
         {contract.ai_summary_simple && (
           <p className="text-sm text-gray-700 leading-relaxed mb-5 p-4 bg-blue-50 rounded-lg border border-blue-100">
             {contract.ai_summary_simple}
@@ -158,24 +164,27 @@ function ContractTabs({
             <div>
               <p className="text-xs font-medium text-amber-800 mb-0.5">Datos no encontrados en el documento:</p>
               <p className="text-xs text-amber-700">{(contract.missing_fields as string[]).join(', ')}</p>
+              <p className="text-xs text-amber-600 mt-1">Puedes completarlos manualmente con el botón <strong>Editar</strong>.</p>
             </div>
           </div>
         )}
 
         {Array.isArray(contract.missing_references) && contract.missing_references.length > 0 && (
-          <div className="mt-3 rounded-lg bg-orange-50 border border-orange-100 p-3 flex gap-2">
-            <ExternalLink className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+          <div className="mt-3 rounded-lg bg-blue-50 border border-blue-100 p-3 flex gap-2">
+            <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-medium text-orange-800 mb-0.5">Documentos referenciados pero no incluidos:</p>
-              <p className="text-xs text-orange-700">{(contract.missing_references as string[]).join(', ')}</p>
+              <p className="text-xs font-medium text-blue-800 mb-0.5">Para un análisis más completo</p>
+              <p className="text-xs text-blue-700">
+                Este contrato menciona otros documentos: {(contract.missing_references as string[]).join(', ')}.
+                Si los tienes, puedes adjuntarlos con <strong>Agregar documento</strong>. No es obligatorio.
+              </p>
             </div>
           </div>
         )}
-      </section>
+      </CollapsibleSection>
 
       {/* Key Points */}
-      <section className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Puntos Clave</h2>
+      <CollapsibleSection title="Puntos Clave">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Copago */}
           {(() => {
@@ -294,21 +303,19 @@ function ContractTabs({
             )
           })()}
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Coberturas */}
-      <section className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Coberturas</h2>
+      <CollapsibleSection title="Coberturas" badge={benefits.length > 0 ? `${benefits.length}` : undefined} defaultOpen={benefits.length > 0}>
         {benefits.length > 0 ? (
           <BenefitsList benefits={benefits} />
         ) : (
           <p className="text-sm text-gray-500 text-center py-6">No se detectaron coberturas individuales en este contrato.</p>
         )}
-      </section>
+      </CollapsibleSection>
 
       {/* Legal */}
-      <section className="bg-white rounded-xl border border-gray-100 p-6">
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Legal y Contacto</h2>
+      <CollapsibleSection title="Legal y Contacto">
         <div className="space-y-4">
           {(contract.cancellation_summary || contract.cancellation_notice_days) && (
             <div>
@@ -357,7 +364,7 @@ function ContractTabs({
             </div>
           )}
         </div>
-      </section>
+      </CollapsibleSection>
     </div>
   )
 }

@@ -50,6 +50,85 @@ export async function DELETE(
   return NextResponse.json({ success: true })
 }
 
+// Campos editables manualmente por el usuario (obs. #24)
+const EDITABLE_FIELDS = [
+  'contract_display_name',
+  'provider_name',
+  'policyholder_name',
+  'monthly_cost',
+  'monthly_cost_currency',
+  'effective_date',
+  'renewal_date',
+  'end_date',
+  'claims_phone',
+  'claims_email',
+  'claims_url',
+] as const
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+  const { data: existing } = await supabase
+    .from('contracts')
+    .select('id')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+  if (!existing) return NextResponse.json({ error: 'No encontrado' }, { status: 404 })
+
+  let body: Record<string, unknown>
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 })
+  }
+
+  const update: Record<string, unknown> = {}
+  for (const key of EDITABLE_FIELDS) {
+    if (key in body) {
+      const v = body[key]
+      // Normalizar strings vacíos a null; números válidos para costo
+      if (key === 'monthly_cost') {
+        update[key] = v === '' || v === null ? null : Number(v)
+        if (update[key] !== null && Number.isNaN(update[key])) {
+          return NextResponse.json({ error: 'Costo mensual inválido' }, { status: 400 })
+        }
+      } else if (key === 'monthly_cost_currency') {
+        update[key] = v ? String(v).toUpperCase() : 'CLP'
+      } else {
+        update[key] = v === '' ? null : v
+      }
+    }
+  }
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ error: 'Nada que actualizar' }, { status: 400 })
+  }
+  if (!('contract_display_name' in update) || update.contract_display_name) {
+    // nombre no puede quedar vacío si se envía
+  } else {
+    return NextResponse.json({ error: 'El nombre no puede estar vacío' }, { status: 400 })
+  }
+
+  const { error } = await supabase.from('contracts').update(update).eq('id', id)
+  if (error) return NextResponse.json({ error: 'Error al actualizar' }, { status: 500 })
+
+  await supabase.from('events').insert({
+    user_id: user.id,
+    contract_id: id,
+    event_type: 'contract_edited',
+    payload: { fields: Object.keys(update) },
+  })
+
+  return NextResponse.json({ success: true })
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

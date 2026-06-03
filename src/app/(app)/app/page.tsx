@@ -1,10 +1,19 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { getSession } from '@/lib/supabase/server'
-import { formatCurrency, formatDate } from '@/lib/utils'
+import { formatCurrency, categoryLabel, sumByCurrency, sanitizeAlerts } from '@/lib/utils'
 import { StatusBadge } from '@/components/StatusBadge'
 import { AlertsPanel } from '@/components/AlertsPanel'
-import { DollarSign, FileText, Bell, Shield, ArrowRight, Upload } from 'lucide-react'
+import { DollarSign, FileText, Bell, Shield, ArrowRight, Upload, Layers } from 'lucide-react'
+
+// Acentos por categoría (azul + lila/púrpura) — obs. #12
+const CATEGORY_ACCENT: Record<string, string> = {
+  isapre: 'bg-blue-500',
+  seguro_complementario: 'bg-violet-500',
+  seguro_catastrofico: 'bg-indigo-500',
+  finanzas: 'bg-purple-400',
+  otro: 'bg-gray-400',
+}
 
 export default async function DashboardPage() {
   const { user, profile, supabase } = await getSession()
@@ -12,27 +21,36 @@ export default async function DashboardPage() {
 
   const [
     { data: contracts },
-    { data: alerts },
+    { data: alertsRaw },
     { data: benefits },
   ] = await Promise.all([
-    supabase.from('contracts').select('id, contract_display_name, status, provider_name, monthly_cost, monthly_cost_currency').eq('user_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('alerts').select('*').eq('user_id', user.id).eq('status', 'open').order('created_at', { ascending: false }).limit(5),
+    supabase.from('contracts').select('id, contract_display_name, status, provider_name, category, monthly_cost, monthly_cost_currency').eq('user_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('alerts').select('*').eq('user_id', user.id).eq('status', 'open').order('created_at', { ascending: false }).limit(8),
     supabase.from('benefits').select('id').eq('user_id', user.id),
   ])
 
+  const alerts = sanitizeAlerts(alertsRaw).slice(0, 5)
   const activeContracts = contracts?.filter(c => c.status === 'ready' || c.status === 'needs_review') ?? []
-  const totalMonthly = activeContracts.reduce((sum, c) => sum + (c.monthly_cost ?? 0), 0)
-  const currency = activeContracts.find(c => c.monthly_cost_currency)?.monthly_cost_currency ?? 'CLP'
+  // Totales por moneda — no mezclar UF y CLP (obs. #16)
+  const costByCurrency = sumByCurrency(activeContracts)
   const recentContracts = contracts?.slice(0, 3) ?? []
+
+  // Conteo por categoría (obs. #11)
+  const categoryCounts: Record<string, number> = {}
+  for (const c of activeContracts) {
+    const cat = c.category ?? 'otro'
+    categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1
+  }
+  const categoryBreakdown = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])
 
   const firstName = profile?.full_name?.split(' ')[0] ?? 'Usuario'
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Bienvenido, {firstName}</h1>
-        <p className="text-sm text-gray-500 mt-1">
+      <div className="mb-8 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 p-6 text-white">
+        <h1 className="text-2xl font-bold">Bienvenido, {firstName}</h1>
+        <p className="text-sm text-blue-100 mt-1 capitalize">
           {new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       </div>
@@ -41,8 +59,10 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           {
-            label: 'Costo mensual total',
-            value: totalMonthly > 0 ? formatCurrency(totalMonthly, currency) : '—',
+            label: costByCurrency.length > 1 ? 'Costo mensual (por moneda)' : 'Costo mensual total',
+            value: costByCurrency.length === 0
+              ? '—'
+              : costByCurrency.map(c => formatCurrency(c.total, c.currency)).join(' + '),
             icon: DollarSign,
             color: 'blue',
           },
@@ -85,6 +105,36 @@ export default async function DashboardPage() {
         ))}
       </div>
 
+      {/* Por categoría (obs. #11 + #12) */}
+      {categoryBreakdown.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 p-5 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Layers className="h-4 w-4 text-violet-500" />
+            <h2 className="font-semibold text-gray-900">Contratos por categoría</h2>
+          </div>
+          {/* Barra de distribución */}
+          <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-100 mb-4">
+            {categoryBreakdown.map(([cat, count]) => (
+              <div
+                key={cat}
+                className={CATEGORY_ACCENT[cat] ?? CATEGORY_ACCENT.otro}
+                style={{ width: `${(count / activeContracts.length) * 100}%` }}
+                title={`${categoryLabel(cat)}: ${count}`}
+              />
+            ))}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {categoryBreakdown.map(([cat, count]) => (
+              <div key={cat} className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${CATEGORY_ACCENT[cat] ?? CATEGORY_ACCENT.otro}`} />
+                <span className="text-sm text-gray-700">{categoryLabel(cat)}</span>
+                <span className="text-sm font-semibold text-gray-900 ml-auto">{count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Alerts */}
         <div>
@@ -118,7 +168,12 @@ export default async function DashboardPage() {
                   className="flex items-center justify-between bg-white rounded-xl border border-gray-100 p-4 hover:border-blue-200 hover:bg-blue-50/30 transition-colors group"
                 >
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{contract.contract_display_name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-900 truncate">{contract.contract_display_name}</p>
+                      <span className="flex-shrink-0 text-[10px] text-violet-700 bg-violet-50 border border-violet-100 rounded-full px-2 py-0.5">
+                        {categoryLabel(contract.category ?? 'otro')}
+                      </span>
+                    </div>
                     <p className="text-xs text-gray-500 mt-0.5">{contract.provider_name ?? 'Proveedor no detectado'}</p>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0 ml-3">

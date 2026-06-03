@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Send, Plus, MessageCircle, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -49,6 +49,12 @@ export default function ChatPage() {
 
       setThreads(th ?? [])
       setContracts(co ?? [])
+
+      // Preseleccionar el contrato si se llegó desde "Consultar al asistente"
+      const preselect = new URLSearchParams(window.location.search).get('contractId')
+      if (preselect && (co ?? []).some(c => c.id === preselect)) {
+        setSelectedContracts([preselect])
+      }
     }
     load()
   }, [])
@@ -188,10 +194,10 @@ export default function ChatPage() {
           {messages.map(msg => (
             <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
               <div className={cn(
-                'max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
+                'rounded-2xl px-4 py-3 text-sm leading-relaxed',
                 msg.role === 'user'
-                  ? 'bg-blue-600 text-white rounded-br-sm'
-                  : 'bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm'
+                  ? 'max-w-[75%] bg-blue-600 text-white rounded-br-sm'
+                  : 'max-w-[90%] bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm'
               )}>
                 {msg.role === 'assistant' ? (
                   <ReactMarkdown
@@ -205,6 +211,16 @@ export default function ChatPage() {
                       code: ({ children }) => <code className="bg-gray-100 rounded px-1 py-0.5 text-xs font-mono">{children}</code>,
                       h3: ({ children }) => <h3 className="font-semibold mt-2 mb-1">{children}</h3>,
                       h4: ({ children }) => <h4 className="font-medium mt-2 mb-1">{children}</h4>,
+                      // Tablas legibles, no comprimidas (obs. #17)
+                      table: ({ children }) => (
+                        <div className="my-2 overflow-x-auto rounded-lg border border-gray-200">
+                          <table className="w-full border-collapse text-xs">{children}</table>
+                        </div>
+                      ),
+                      thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
+                      th: ({ children }) => <th className="border-b border-gray-200 px-3 py-2 text-left font-semibold text-gray-700 whitespace-nowrap">{children}</th>,
+                      td: ({ children }) => <td className="border-b border-gray-100 px-3 py-2 align-top text-gray-700">{children}</td>,
+                      tr: ({ children }) => <tr>{children}</tr>,
                     }}
                   >
                     {msg.content}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import { AlertTriangle, CheckCircle, MinusCircle, ChevronDown, ChevronUp, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -63,10 +63,34 @@ function formatCopay(copay: Json): string {
 }
 
 export function CompararClient({ contracts, benefits }: CompararClientProps) {
-  const [selectedIds, setSelectedIds] = useState<string[]>(contracts.slice(0, 2).map(c => c.id))
+  // Solo se comparan contratos de la MISMA categoría (decisión reunión, obs. #10/#C11)
+  const contractsByCategory = useMemo(() => {
+    const map: Record<string, Contract[]> = {}
+    for (const c of contracts) {
+      const cat = c.category ?? 'otro'
+      ;(map[cat] ??= []).push(c)
+    }
+    return map
+  }, [contracts])
+
+  // Categorías que tienen al menos 2 contratos (comparables)
+  const comparableCategories = useMemo(
+    () => Object.keys(contractsByCategory).filter(cat => contractsByCategory[cat].length >= 2),
+    [contractsByCategory]
+  )
+
+  const [activeCat, setActiveCat] = useState<string>(comparableCategories[0] ?? '')
+  const catContracts = contractsByCategory[activeCat] ?? []
+
+  const [selectedIds, setSelectedIds] = useState<string[]>(catContracts.slice(0, 2).map(c => c.id))
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
-  const selected = contracts.filter(c => selectedIds.includes(c.id))
+  // Al cambiar de categoría, reiniciar la selección a los 2 primeros de esa categoría
+  useEffect(() => {
+    setSelectedIds((contractsByCategory[activeCat] ?? []).slice(0, 2).map(c => c.id))
+  }, [activeCat, contractsByCategory])
+
+  const selected = catContracts.filter(c => selectedIds.includes(c.id))
 
   function toggleContract(id: string) {
     setSelectedIds(prev =>
@@ -107,6 +131,11 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
       .map(([cat]) => cat)
   }, [categoryMap, selectedIds])
 
+  // Auto-expandir las categorías duplicadas para que se vea directamente cuáles son (obs. #9)
+  useEffect(() => {
+    if (overlaps.length > 0) setExpandedCategories(new Set(overlaps))
+  }, [overlaps])
+
   // Estimate wasted cost (rough: proportional to # overlapping categories)
   const totalOverlapCost = useMemo(() => {
     if (overlaps.length === 0 || selected.length < 2) return 0
@@ -125,14 +154,16 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
 
   const allCategories = Object.keys(categoryMap).sort()
 
-  if (contracts.length < 2) {
+  if (comparableCategories.length === 0) {
     return (
       <div className="p-6 md:p-8 max-w-5xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Comparar contratos</h1>
         <div className="mt-12 text-center">
           <AlertTriangle className="h-10 w-10 text-amber-400 mx-auto mb-3" />
-          <p className="text-gray-600 font-medium">Necesitas al menos 2 contratos procesados para comparar</p>
-          <p className="text-sm text-gray-400 mt-1">Sube y procesa más contratos para detectar coberturas duplicadas</p>
+          <p className="text-gray-600 font-medium">Necesitas al menos 2 contratos de la misma categoría para comparar</p>
+          <p className="text-sm text-gray-400 mt-1">
+            La comparación solo tiene sentido entre contratos del mismo tipo (ej. Isapre con Isapre, o seguro complementario con seguro complementario).
+          </p>
         </div>
       </div>
     )
@@ -142,25 +173,55 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Comparar contratos</h1>
-        <p className="text-sm text-gray-500 mt-1">Detecta coberturas duplicadas y posible pago doble entre tus contratos</p>
+        <p className="text-sm text-gray-500 mt-1">
+          Compara contratos de la misma categoría para detectar coberturas que se repiten
+        </p>
       </div>
 
-      {/* Contract selector */}
+      {/* Category selector — solo se compara dentro de una categoría (obs. #10/#C11) */}
+      {comparableCategories.length > 1 && (
+        <div className="mb-4">
+          <p className="text-sm font-medium text-gray-700 mb-2">Categoría a comparar:</p>
+          <div className="flex flex-wrap gap-2">
+            {comparableCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setActiveCat(cat)}
+                className={cn(
+                  'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
+                  activeCat === cat
+                    ? 'bg-violet-600 border-violet-600 text-white'
+                    : 'bg-white border-gray-200 text-gray-700 hover:border-violet-300'
+                )}
+              >
+                {CATEGORY_LABELS[cat] ?? cat} ({contractsByCategory[cat].length})
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Contract selector (solo contratos de la categoría activa) */}
       <div className="mb-6">
         <p className="text-sm font-medium text-gray-700 mb-3">Selecciona los contratos a comparar:</p>
         <div className="flex flex-wrap gap-2">
-          {contracts.map(c => (
+          {catContracts.map(c => (
             <button
               key={c.id}
               onClick={() => toggleContract(c.id)}
               className={cn(
-                'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
+                'rounded-lg border px-4 py-2 text-left transition-colors',
                 selectedIds.includes(c.id)
                   ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300'
+                  : 'bg-white border-gray-200 text-gray-800 hover:border-blue-300'
               )}
             >
-              {c.contract_display_name}
+              <span className="block text-sm font-semibold">{c.contract_display_name}</span>
+              {c.provider_name && (
+                <span className={cn('block text-xs', selectedIds.includes(c.id) ? 'text-blue-100' : 'text-gray-500')}>
+                  {c.provider_name}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -300,7 +361,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
                                 )}>
                                   {hasCoverage
                                     ? `${categoryMap[cat][c.id].length} cobertura${categoryMap[cat][c.id].length > 1 ? 's' : ''}`
-                                    : 'No cubierto'}
+                                    : 'Sin cobertura'}
                                 </span>
                               </div>
                               {c.id === selected[selected.length - 1].id && (

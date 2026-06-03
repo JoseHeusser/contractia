@@ -1,15 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { Shield, Clock, Info } from 'lucide-react'
+import { Shield, Clock, Info, AlertCircle, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Tables } from '@/types/database'
 import type { Json } from '@/types/database'
 
-type Benefit = Tables<'benefits'>
+export type BenefitWithContract = Tables<'benefits'> & {
+  contracts?: { contract_display_name: string; provider_name?: string | null; category?: string | null } | null
+}
+type Benefit = BenefitWithContract
 
 interface BenefitsListProps {
   benefits: Benefit[]
+  /** Muestra a qué contrato pertenece cada beneficio (obs. #5, #19, #22) */
+  showContract?: boolean
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -50,7 +55,7 @@ function formatWaiting(waiting: Json): string | null {
   return null
 }
 
-export function BenefitsList({ benefits }: BenefitsListProps) {
+export function BenefitsList({ benefits, showContract = false }: BenefitsListProps) {
   const categories = ['todos', ...Array.from(new Set(benefits.map(b => b.category ?? 'otro')))]
   const [activeCategory, setActiveCategory] = useState('todos')
 
@@ -101,6 +106,13 @@ export function BenefitsList({ benefits }: BenefitsListProps) {
                   )}
                 </div>
 
+                {showContract && benefit.contracts && (
+                  <div className="inline-flex items-center gap-1.5 mb-2 rounded-md bg-violet-50 border border-violet-100 px-2 py-0.5">
+                    <FileText className="h-3 w-3 text-violet-500" />
+                    <span className="text-xs font-medium text-violet-700">{benefit.contracts.contract_display_name}</span>
+                  </div>
+                )}
+
                 {benefit.includes_simple && (
                   <p className="text-xs text-gray-600 mb-3">{benefit.includes_simple}</p>
                 )}
@@ -121,7 +133,12 @@ export function BenefitsList({ benefits }: BenefitsListProps) {
                 </div>
 
                 {benefit.restrictions && (
-                  <p className="text-xs text-gray-400 mt-2 italic">Restricción: {benefit.restrictions}</p>
+                  <div className="mt-2.5 flex items-start gap-1.5 rounded-lg bg-amber-50 border border-amber-100 px-2.5 py-2">
+                    <AlertCircle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-800 leading-snug">
+                      <span className="font-semibold">Restricción:</span> {benefit.restrictions}
+                    </p>
+                  </div>
                 )}
               </div>
             )
