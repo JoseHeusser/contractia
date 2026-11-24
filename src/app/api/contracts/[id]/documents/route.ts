@@ -1,12 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { processContract } from '@/lib/processing/processContract'
+
+// El procesamiento corre en after() y comparte este límite de tiempo.
+export const maxDuration = 300
 
 const ALLOWED_MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/tiff']
 const MAX_SIZE = 50 * 1024 * 1024 // 50MB por archivo
 
 /**
  * Agrega uno o más documentos a un contrato YA existente y vuelve a disparar
- * el procesamiento (WF1). Resuelve obs. #1: el usuario podía ver una alerta
+ * el procesamiento (processContract). Resuelve obs. #1: el usuario podía ver una alerta
  * pidiendo subir otro documento, pero no tenía dónde hacerlo.
  */
 export async function POST(
@@ -81,7 +85,7 @@ export async function POST(
   }
 
   // Limpiar filas derivadas antes de reprocesar para evitar DUPLICADOS
-  // (WF1 las regenera desde cero). NO se borran los documentos ni el contrato.
+  // (processContract las regenera desde cero). NO se borran los documentos ni el contrato.
   await Promise.all([
     supabase.from('benefits').delete().eq('contract_id', id),
     supabase.from('alerts').delete().eq('contract_id', id),
@@ -99,34 +103,8 @@ export async function POST(
     payload: { document_ids: documentIds, file_count: files.length },
   })
 
-  // Re-disparar WF1 con todos los documentos del contrato
-  const webhookUrl = process.env.N8N_WEBHOOK_URL
-  if (webhookUrl) {
-    try {
-      const { data: allDocs } = await supabase
-        .from('contract_documents')
-        .select('id, storage_path')
-        .eq('contract_id', id)
-      const allPaths = (allDocs ?? []).map(d => d.storage_path)
-      const allIds = (allDocs ?? []).map(d => d.id)
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          contractId: id,
-          documentId: allIds[0],
-          storagePath: allPaths[0],
-          storagePaths: allPaths,
-          documentIds: allIds,
-          fileCount: allPaths.length,
-          reprocess: true,
-        }),
-      })
-    } catch {
-      // No fatal
-    }
-  }
+  // Reprocesar el contrato completo (todos sus documentos) en segundo plano
+  after(() => processContract(id))
 
   return NextResponse.json({ contractId: id, documentIds })
 }

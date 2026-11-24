@@ -1,5 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse, after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { processContract } from '@/lib/processing/processContract'
+
+// El procesamiento corre en after() y comparte este límite de tiempo.
+export const maxDuration = 300
 
 const ALLOWED_MIMES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/tiff']
 const MAX_SIZE = 50 * 1024 * 1024 // 50MB per file
@@ -89,28 +93,9 @@ export async function POST(request: NextRequest) {
     payload: { document_ids: documentIds, file_count: files.length },
   })
 
-  // Trigger n8n — pass all storage paths so WF1 can process all files
-  const webhookUrl = process.env.N8N_WEBHOOK_URL
-  if (webhookUrl) {
-    try {
-      await fetch(webhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          contractId: contract.id,
-          documentId: documentIds[0],
-          storagePath: storagePaths[0],
-          // Multi-file fields
-          storagePaths,
-          documentIds,
-          fileCount: files.length,
-        }),
-      })
-    } catch {
-      // Non-fatal
-    }
-  }
+  // Procesar en segundo plano: la respuesta vuelve de inmediato y la UI
+  // consulta /api/contracts/[id]/status hasta que termine.
+  after(() => processContract(contract.id))
 
   return NextResponse.json({ contractId: contract.id, documentIds })
 }
