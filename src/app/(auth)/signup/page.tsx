@@ -36,6 +36,9 @@ export default function SignupPage() {
       password,
       options: {
         data: { full_name: fullName },
+        // El link del email vuelve a /auth/callback, que intercambia el código
+        // por la sesión y redirige a /app.
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
 
