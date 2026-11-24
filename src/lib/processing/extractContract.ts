@@ -62,7 +62,11 @@ const ALERT_TYPES = [
   'other',
 ] as const
 
-export const ContractExtraction = z.object({
+// La extracción se divide en dos llamadas en paralelo: un único schema con
+// todo excede el tamaño máximo de gramática de structured outputs.
+
+/** Llamada A: datos del contrato y citas de respaldo. */
+export const ContractCore = z.object({
   provider_name: str.describe('Isapre, aseguradora o compañía que emite el plan/póliza'),
   policyholder_name: str.describe('Nombre del titular / afiliado / asegurado'),
   ai_summary_simple: z
@@ -120,7 +124,10 @@ export const ContractExtraction = z.object({
   evidence: z
     .array(SourceRef.extend({ field_key: z.enum(EVIDENCE_FIELD_KEYS) }))
     .describe('Una cita de respaldo por cada dato extraído que aparezca en el documento'),
+})
 
+/** Llamada B: coberturas y alertas. */
+export const ContractItems = z.object({
   benefits: z
     .array(
       z.object({
@@ -159,7 +166,7 @@ export const ContractExtraction = z.object({
     .describe('Lo que el afiliado debería saber o hacer: alzas, fechas límite, carencias vigentes, exclusiones relevantes, documentos faltantes'),
 })
 
-export type ContractExtraction = z.infer<typeof ContractExtraction>
+export type ContractExtraction = z.infer<typeof ContractCore> & z.infer<typeof ContractItems>
 
 export type DocumentForExtraction = {
   name: string
@@ -193,6 +200,30 @@ export async function extractContract(params: {
     })
     .join('\n\n')
 
+  const context =
+    `Contrato: "${params.contractName}" (categoría declarada por el usuario: ${params.category}).\n` +
+    `Fecha de hoy: ${params.today}.\n\n`
+
+  const [core, items] = await Promise.all([
+    runExtraction(
+      ContractCore,
+      docsXml,
+      context + 'Extrae los datos generales del contrato y las citas de respaldo según el esquema.',
+    ),
+    runExtraction(
+      ContractItems,
+      docsXml,
+      context + 'Extrae las coberturas individuales del plan y las alertas para el afiliado según el esquema.',
+    ),
+  ])
+  return { ...core, ...items }
+}
+
+async function runExtraction<T extends z.ZodType>(
+  schema: T,
+  docsXml: string,
+  instruction: string,
+): Promise<z.infer<T>> {
   const stream = anthropic.beta.messages.stream({
     model: EXTRACTION_MODEL,
     max_tokens: 64000,
@@ -200,17 +231,17 @@ export async function extractContract(params: {
     fallbacks: 'default',
     output_config: {
       effort: 'high',
-      format: betaZodOutputFormat(ContractExtraction),
+      format: betaZodOutputFormat(schema),
     },
     system: SYSTEM_PROMPT,
     messages: [
       {
         role: 'user',
-        content:
-          `${docsXml}\n\n` +
-          `Contrato: "${params.contractName}" (categoría declarada por el usuario: ${params.category}).\n` +
-          `Fecha de hoy: ${params.today}.\n\n` +
-          'Extrae los datos del contrato según el esquema.',
+        content: [
+          // Mismo prefijo en ambas llamadas → el texto de los documentos se cachea
+          { type: 'text', text: docsXml, cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: instruction },
+        ],
       },
     ],
   })
@@ -229,7 +260,7 @@ export async function extractContract(params: {
   if (!message.parsed_output) {
     throw new ProcessingError('extraction_invalid', 'El análisis del contrato no devolvió un resultado válido.')
   }
-  return message.parsed_output
+  return message.parsed_output as z.infer<T>
 }
 
 function escapeAttr(s: string): string {
