@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { BenefitsList, type BenefitWithContract } from '@/components/BenefitsList'
-import { Shield, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
+import { Mascot } from '@/components/Mascot'
 
 const CATEGORY_LABELS: Record<string, string> = {
   hospitalizacion: 'Hospitalización', ambulatorio: 'Ambulatorio', dental: 'Dental',
@@ -39,16 +40,16 @@ export default async function BenefitsPage() {
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Beneficios</h1>
-        <p className="text-sm text-gray-500 mt-1">Todos tus beneficios en un solo lugar</p>
+        <h1 className="text-2xl font-bold text-ink">Beneficios</h1>
+        <p className="text-sm text-ink-muted mt-1">Todos tus beneficios en un solo lugar</p>
       </div>
 
       {overlaps.length > 0 && (
-        <div className="mb-6 rounded-xl bg-blue-50 border border-blue-100 p-4 flex gap-3">
-          <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div className="mb-6 rounded-xl bg-lavender border border-lavender-deep p-4 flex gap-3">
+          <Info className="h-5 w-5 text-violet flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-blue-900">Coberturas que se complementan</p>
-            <p className="text-xs text-blue-800 mt-1">
+            <p className="text-sm font-medium text-indigo">Coberturas que se complementan</p>
+            <p className="text-xs text-ink-soft mt-1">
               Tienes cobertura en{' '}
               {overlaps.map((o, i) => (
                 <span key={o.cat}>
@@ -58,10 +59,10 @@ export default async function BenefitsPage() {
               ))}
               .
             </p>
-            <p className="text-xs text-blue-700 mt-1.5">
+            <p className="text-xs text-ink-soft mt-1.5">
               Normalmente <strong>no es un cobro doble</strong>: el seguro complementario suele cubrir <em>después</em> de tu
               isapre (primero paga la isapre y luego el complementario sobre el copago restante). Revisa el detalle en{' '}
-              <a href="/app/comparar" className="underline font-medium">Comparar</a> para ver cómo se combinan.
+              <a href="/app/comparar" className="underline font-semibold text-violet">Comparar</a> para ver cómo se combinan.
             </p>
           </div>
         </div>
@@ -71,9 +72,9 @@ export default async function BenefitsPage() {
         <BenefitsList benefits={benefits} showContract />
       ) : (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Shield className="h-12 w-12 text-gray-200 mb-3" />
-          <p className="text-sm font-medium text-gray-700 mb-1">Sin beneficios registrados</p>
-          <p className="text-xs text-gray-500">Los beneficios aparecerán automáticamente al procesar tus contratos.</p>
+          <Mascot height={150} className="mb-4 w-24" />
+          <p className="text-base font-semibold text-indigo mb-1 font-display">Todavía no hay beneficios</p>
+          <p className="text-xs text-ink-muted">Los beneficios aparecerán automáticamente al procesar tus contratos.</p>
         </div>
       )}
     </div>

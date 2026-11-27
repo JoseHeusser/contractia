@@ -24,25 +24,25 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       icon: <XCircle className="h-3.5 w-3.5" />,
     },
     uploaded: {
-      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      color: 'bg-lavender text-violet border-lavender-deep',
       icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
     },
     ocr_processing: {
-      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      color: 'bg-lavender text-violet border-lavender-deep',
       icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
     },
     ocr_done: {
-      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      color: 'bg-lavender text-violet border-lavender-deep',
       icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
     },
     extracting: {
-      color: 'bg-blue-50 text-blue-700 border-blue-200',
+      color: 'bg-lavender text-violet border-lavender-deep',
       icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
     },
   }
 
   const cfg = config[status] ?? {
-    color: 'bg-gray-50 text-gray-600 border-gray-200',
+    color: 'bg-surface text-ink-muted border-line-strong',
     icon: <Clock className="h-3.5 w-3.5" />,
   }
 

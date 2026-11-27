@@ -32,7 +32,7 @@ export function EvidencePopover({ snippet, page, section, children, className }:
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 transition-colors"
+        className="inline-flex items-center gap-1 text-violet hover:text-indigo transition-colors"
         title="Ver evidencia en el contrato"
       >
         {children}
@@ -40,21 +40,21 @@ export function EvidencePopover({ snippet, page, section, children, className }:
       </button>
 
       {open && (
-        <div className="absolute z-50 bottom-full left-0 mb-2 w-80 rounded-xl border border-blue-100 bg-white shadow-lg shadow-blue-900/10">
-          <div className="p-3 border-b border-gray-100 flex items-center gap-2">
-            <FileText className="h-3.5 w-3.5 text-blue-500 flex-shrink-0" />
-            <span className="text-xs font-medium text-gray-600">Evidencia del contrato</span>
+        <div className="absolute z-50 bottom-full left-0 mb-2 w-80 rounded-xl border border-lavender-deep bg-white shadow-lg shadow-indigo/10">
+          <div className="p-3 border-b border-line flex items-center gap-2">
+            <FileText className="h-3.5 w-3.5 text-violet flex-shrink-0" />
+            <span className="text-xs font-medium text-ink-muted">Evidencia del contrato</span>
             {page && (
-              <span className="ml-auto text-xs text-gray-400 bg-gray-50 rounded px-1.5 py-0.5">
+              <span className="ml-auto text-xs text-ink-faint bg-surface rounded px-1.5 py-0.5">
                 Pág. {page}
               </span>
             )}
           </div>
           <div className="p-3">
             {section && (
-              <p className="text-xs font-medium text-gray-500 mb-1.5">{section}</p>
+              <p className="text-xs font-medium text-ink-muted mb-1.5">{section}</p>
             )}
-            <blockquote className="text-xs text-gray-700 leading-relaxed border-l-2 border-blue-300 pl-2.5 italic">
+            <blockquote className="text-xs text-ink-soft leading-relaxed border-l-2 border-violet/50 pl-2.5 italic">
               &ldquo;{snippet}&rdquo;
             </blockquote>
           </div>

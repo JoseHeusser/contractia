@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import { AlertTriangle, CheckCircle, MinusCircle, ChevronDown, ChevronUp, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Mascot } from '@/components/Mascot'
 import type { Json } from '@/types/database'
 
 interface Contract {
@@ -43,14 +44,14 @@ const CATEGORY_LABELS: Record<string, string> = {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  hospitalizacion: 'bg-blue-50 text-blue-700 border-blue-200',
+  hospitalizacion: 'bg-lavender text-violet border-lavender-deep',
   ambulatorio: 'bg-green-50 text-green-700 border-green-200',
   dental: 'bg-cyan-50 text-cyan-700 border-cyan-200',
   mental: 'bg-purple-50 text-purple-700 border-purple-200',
   farmacia: 'bg-orange-50 text-orange-700 border-orange-200',
   maternidad: 'bg-pink-50 text-pink-700 border-pink-200',
   vision: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  otro: 'bg-gray-50 text-gray-700 border-gray-200',
+  otro: 'bg-surface text-ink-soft border-line-strong',
 }
 
 function formatCopay(copay: Json): string {
@@ -157,11 +158,11 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
   if (comparableCategories.length === 0) {
     return (
       <div className="p-6 md:p-8 max-w-5xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Comparar contratos</h1>
-        <div className="mt-12 text-center">
-          <AlertTriangle className="h-10 w-10 text-amber-400 mx-auto mb-3" />
-          <p className="text-gray-600 font-medium">Necesitas al menos 2 contratos de la misma categoría para comparar</p>
-          <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-bold text-ink mb-2">Comparar contratos</h1>
+        <div className="mt-8 rounded-3xl border border-dashed border-line-strong bg-white px-6 py-12 text-center">
+          <Mascot height={150} className="mx-auto mb-4 w-24" />
+          <p className="font-display text-lg font-semibold text-indigo">Necesitas al menos 2 contratos de la misma categoría para comparar</p>
+          <p className="text-sm text-ink-muted mt-1 max-w-lg mx-auto">
             La comparación solo tiene sentido entre contratos del mismo tipo (ej. Isapre con Isapre, o seguro complementario con seguro complementario).
           </p>
         </div>
@@ -172,8 +173,8 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Comparar contratos</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-ink">Comparar contratos</h1>
+        <p className="text-sm text-ink-muted mt-1">
           Compara contratos de la misma categoría para detectar coberturas que se repiten
         </p>
       </div>
@@ -181,7 +182,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
       {/* Category selector — solo se compara dentro de una categoría (obs. #10/#C11) */}
       {comparableCategories.length > 1 && (
         <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">Categoría a comparar:</p>
+          <p className="text-sm font-medium text-ink-soft mb-2">Categoría a comparar:</p>
           <div className="flex flex-wrap gap-2">
             {comparableCategories.map(cat => (
               <button
@@ -190,8 +191,8 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
                 className={cn(
                   'rounded-lg border px-4 py-2 text-sm font-medium transition-colors',
                   activeCat === cat
-                    ? 'bg-violet-600 border-violet-600 text-white'
-                    : 'bg-white border-gray-200 text-gray-700 hover:border-violet-300'
+                    ? 'bg-indigo border-indigo text-white'
+                    : 'bg-white border-line-strong text-ink-soft hover:border-violet/50'
                 )}
               >
                 {CATEGORY_LABELS[cat] ?? cat} ({contractsByCategory[cat].length})
@@ -203,7 +204,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
 
       {/* Contract selector (solo contratos de la categoría activa) */}
       <div className="mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-3">Selecciona los contratos a comparar:</p>
+        <p className="text-sm font-medium text-ink-soft mb-3">Selecciona los contratos a comparar:</p>
         <div className="flex flex-wrap gap-2">
           {catContracts.map(c => (
             <button
@@ -212,13 +213,13 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
               className={cn(
                 'rounded-lg border px-4 py-2 text-left transition-colors',
                 selectedIds.includes(c.id)
-                  ? 'bg-blue-600 border-blue-600 text-white'
-                  : 'bg-white border-gray-200 text-gray-800 hover:border-blue-300'
+                  ? 'bg-indigo border-indigo text-white'
+                  : 'bg-white border-line-strong text-ink-soft hover:border-violet/50'
               )}
             >
               <span className="block text-sm font-semibold">{c.contract_display_name}</span>
               {c.provider_name && (
-                <span className={cn('block text-xs', selectedIds.includes(c.id) ? 'text-blue-100' : 'text-gray-500')}>
+                <span className={cn('block text-xs', selectedIds.includes(c.id) ? 'text-lavender' : 'text-ink-muted')}>
                   {c.provider_name}
                 </span>
               )}
@@ -228,7 +229,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
       </div>
 
       {selected.length < 2 ? (
-        <div className="text-center py-10 text-gray-400 text-sm">
+        <div className="text-center py-10 text-ink-faint text-sm">
           Selecciona al menos 2 contratos para comparar
         </div>
       ) : (
@@ -239,23 +240,23 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
               'rounded-xl border p-4',
               overlaps.length > 0 ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'
             )}>
-              <p className="text-2xl font-bold text-gray-900">{overlaps.length}</p>
-              <p className="text-xs text-gray-600 mt-0.5">
+              <p className="text-2xl font-bold text-ink">{overlaps.length}</p>
+              <p className="text-xs text-ink-muted mt-0.5">
                 {overlaps.length === 1 ? 'Categoría duplicada' : 'Categorías duplicadas'}
               </p>
             </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-4">
-              <p className="text-2xl font-bold text-gray-900">{allCategories.length}</p>
-              <p className="text-xs text-gray-600 mt-0.5">Categorías totales</p>
+            <div className="rounded-xl border border-line bg-white p-4">
+              <p className="text-2xl font-bold text-ink">{allCategories.length}</p>
+              <p className="text-xs text-ink-muted mt-0.5">Categorías totales</p>
             </div>
-            <div className="rounded-xl border border-gray-100 bg-white p-4">
-              <p className="text-2xl font-bold text-gray-900">
+            <div className="rounded-xl border border-line bg-white p-4">
+              <p className="text-2xl font-bold text-ink">
                 {formatCurrency(
                   selected.reduce((s, c) => s + (c.monthly_cost ?? 0), 0),
                   selected[0]?.monthly_cost_currency
                 )}
               </p>
-              <p className="text-xs text-gray-600 mt-0.5">Costo mensual total</p>
+              <p className="text-xs text-ink-muted mt-0.5">Costo mensual total</p>
             </div>
             {totalOverlapCost > 0 && (
               <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
@@ -283,22 +284,22 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
           )}
 
           {/* Comparison table */}
-          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl border border-line overflow-hidden">
             {/* Header row */}
             <div className={cn(
-              'grid border-b border-gray-100',
+              'grid border-b border-line',
               `grid-cols-${Math.min(selected.length + 1, 5)}`
             )}
             style={{ gridTemplateColumns: `180px repeat(${selected.length}, 1fr)` }}
             >
-              <div className="px-4 py-3 bg-gray-50 border-r border-gray-100" />
+              <div className="px-4 py-3 bg-surface border-r border-line" />
               {selected.map(c => (
-                <div key={c.id} className="px-4 py-3 bg-gray-50 border-r border-gray-100 last:border-r-0">
-                  <p className="text-sm font-semibold text-gray-900 truncate">{c.contract_display_name}</p>
-                  <p className="text-xs text-gray-500 truncate">{c.provider_name ?? '—'}</p>
+                <div key={c.id} className="px-4 py-3 bg-surface border-r border-line last:border-r-0">
+                  <p className="text-sm font-semibold text-ink truncate">{c.contract_display_name}</p>
+                  <p className="text-xs text-ink-muted truncate">{c.provider_name ?? '—'}</p>
                   <div className="flex items-center gap-1 mt-1">
-                    <DollarSign className="h-3 w-3 text-gray-400" />
-                    <span className="text-xs font-medium text-gray-700">
+                    <DollarSign className="h-3 w-3 text-ink-faint" />
+                    <span className="text-xs font-medium text-ink-soft">
                       {formatCurrency(c.monthly_cost, c.monthly_cost_currency)}/mes
                     </span>
                   </div>
@@ -308,7 +309,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
 
             {/* Category rows */}
             {allCategories.length === 0 ? (
-              <div className="px-4 py-10 text-center text-sm text-gray-400">
+              <div className="px-4 py-10 text-center text-sm text-ink-faint">
                 No se encontraron beneficios en los contratos seleccionados
               </div>
             ) : (
@@ -319,7 +320,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
 
                 return (
                   <div key={cat} className={cn(
-                    'border-b border-gray-50 last:border-b-0',
+                    'border-b border-line last:border-b-0',
                     isOverlap && 'bg-amber-50/40'
                   )}>
                     {/* Category header row */}
@@ -329,10 +330,10 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
                     >
                       <div
                         style={{ gridTemplateColumns: `180px repeat(${selected.length}, 1fr)` }}
-                        className="grid items-center hover:bg-gray-50/80 transition-colors"
+                        className="grid items-center hover:bg-surface/80 transition-colors"
                       >
                         {/* Category name */}
-                        <div className="px-4 py-3 border-r border-gray-100 flex items-center gap-2">
+                        <div className="px-4 py-3 border-r border-line flex items-center gap-2">
                           <span className={cn(
                             'text-xs rounded-full border px-2.5 py-0.5 font-medium',
                             CATEGORY_COLORS[cat] ?? CATEGORY_COLORS.otro
@@ -348,16 +349,16 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
                         {selected.map(c => {
                           const hasCoverage = (categoryMap[cat]?.[c.id]?.length ?? 0) > 0
                           return (
-                            <div key={c.id} className="px-4 py-3 border-r border-gray-100 last:border-r-0 flex items-center justify-between">
+                            <div key={c.id} className="px-4 py-3 border-r border-line last:border-r-0 flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 {hasCoverage ? (
                                   <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
                                 ) : (
-                                  <MinusCircle className="h-4 w-4 text-gray-300 flex-shrink-0" />
+                                  <MinusCircle className="h-4 w-4 text-lavender-deep flex-shrink-0" />
                                 )}
                                 <span className={cn(
                                   'text-xs',
-                                  hasCoverage ? 'text-gray-700' : 'text-gray-400'
+                                  hasCoverage ? 'text-ink-soft' : 'text-ink-faint'
                                 )}>
                                   {hasCoverage
                                     ? `${categoryMap[cat][c.id].length} cobertura${categoryMap[cat][c.id].length > 1 ? 's' : ''}`
@@ -365,7 +366,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
                                 </span>
                               </div>
                               {c.id === selected[selected.length - 1].id && (
-                                <span className="ml-2 text-gray-400">
+                                <span className="ml-2 text-ink-faint">
                                   {isExpanded
                                     ? <ChevronUp className="h-3.5 w-3.5" />
                                     : <ChevronDown className="h-3.5 w-3.5" />}
@@ -380,7 +381,7 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
                     {/* Expanded detail rows */}
                     {isExpanded && contractsWithCat.length > 0 && (
                       <div
-                        className="border-t border-gray-100 bg-white"
+                        className="border-t border-line bg-white"
                         style={{ gridTemplateColumns: `180px repeat(${selected.length}, 1fr)` }}
                       >
                         {/* Find max benefits in any single contract for this category */}
@@ -391,30 +392,30 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
                           return Array.from({ length: maxBenefits }).map((_, i) => (
                             <div
                               key={i}
-                              className="grid border-t border-gray-50"
+                              className="grid border-t border-line"
                               style={{ gridTemplateColumns: `180px repeat(${selected.length}, 1fr)` }}
                             >
-                              <div className="px-4 py-2 border-r border-gray-100 bg-gray-50/50">
-                                <span className="text-xs text-gray-400">Detalle {i + 1}</span>
+                              <div className="px-4 py-2 border-r border-line bg-surface/50">
+                                <span className="text-xs text-ink-faint">Detalle {i + 1}</span>
                               </div>
                               {selected.map(c => {
                                 const benefit = categoryMap[cat]?.[c.id]?.[i]
                                 return (
-                                  <div key={c.id} className="px-4 py-2.5 border-r border-gray-100 last:border-r-0">
+                                  <div key={c.id} className="px-4 py-2.5 border-r border-line last:border-r-0">
                                     {benefit ? (
                                       <div>
-                                        <p className="text-xs font-medium text-gray-800">{benefit.name}</p>
+                                        <p className="text-xs font-medium text-ink-soft">{benefit.name}</p>
                                         {benefit.includes_simple && (
-                                          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{benefit.includes_simple}</p>
+                                          <p className="text-xs text-ink-muted mt-0.5 line-clamp-2">{benefit.includes_simple}</p>
                                         )}
                                         {benefit.copay && (
-                                          <p className="text-xs text-gray-500 mt-1">
+                                          <p className="text-xs text-ink-muted mt-1">
                                             Copago: <span className="font-medium">{formatCopay(benefit.copay)}</span>
                                           </p>
                                         )}
                                       </div>
                                     ) : (
-                                      <span className="text-xs text-gray-300">—</span>
+                                      <span className="text-xs text-lavender-deep">—</span>
                                     )}
                                   </div>
                                 )
@@ -432,9 +433,9 @@ export function CompararClient({ contracts, benefits }: CompararClientProps) {
 
           {/* Recommendation */}
           {overlaps.length > 0 && (
-            <div className="mt-6 rounded-xl bg-blue-50 border border-blue-100 p-4">
-              <p className="text-sm font-semibold text-blue-900 mb-1">Recomendación</p>
-              <p className="text-sm text-blue-800">
+            <div className="mt-6 rounded-xl bg-lavender border border-lavender-deep p-4">
+              <p className="text-sm font-semibold text-indigo mb-1">Recomendación</p>
+              <p className="text-sm text-indigo">
                 Tienes cobertura duplicada en <strong>{overlaps.map(o => CATEGORY_LABELS[o] ?? o).join(', ')}</strong>.
                 Considera revisar con tu aseguradora si puedes eliminar una de las coberturas o reducir el plan para ahorrar en tu costo mensual.
               </p>

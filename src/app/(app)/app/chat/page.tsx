@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Send, Plus, MessageCircle, Loader2 } from 'lucide-react'
+import { Send, Plus, Loader2 } from 'lucide-react'
+import { Mascot, AssistantAvatar, Spark } from '@/components/Mascot'
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -23,6 +24,16 @@ interface Thread {
 interface Contract {
   id: string
   contract_display_name: string
+}
+
+// Solo presentación: convierte las citas "[Extracto N]" / "[Norma N]" que escribe
+// el asistente en un chip con la ✦ dorada de la marca (vía `code` de Markdown).
+const CITATION_MARK = '✦'
+function markCitations(markdown: string): string {
+  return markdown.replace(
+    /\[((?:Extracto|Norma)s?\s[^\]\n`]{1,60})\](?!\()/g,
+    (_, label: string) => `\`${CITATION_MARK}${label}\``
+  )
 }
 
 export default function ChatPage() {
@@ -116,16 +127,22 @@ export default function ChatPage() {
     setSelectedContracts(prev => prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id])
   }
 
+  const SUGGESTIONS = [
+    '¿Qué cubre mi plan en una urgencia?',
+    '¿Cuánto pago por una consulta médica?',
+    '¿Tengo cobertura dental?',
+  ]
+
   return (
     <div className="flex h-full">
       {/* Thread sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-gray-100 bg-white">
-        <div className="p-3 border-b border-gray-100">
+      <aside className="hidden md:flex flex-col w-64 border-r border-line bg-white">
+        <div className="p-3 border-b border-line">
           <button
             onClick={() => { setActiveThread(null); setMessages([]) }}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 px-3 py-2 text-sm text-gray-600 hover:border-blue-300 hover:text-blue-700 hover:bg-blue-50 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-white px-3 py-2.5 text-sm font-semibold text-indigo hover:border-violet hover:bg-lavender transition-colors"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden />
             Nueva conversación
           </button>
         </div>
@@ -134,35 +151,37 @@ export default function ChatPage() {
             <button
               key={thread.id}
               onClick={() => loadThread(thread.id)}
+              aria-current={activeThread === thread.id ? 'true' : undefined}
               className={cn(
-                'w-full text-left rounded-lg px-3 py-2 text-sm transition-colors',
-                activeThread === thread.id ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+                'w-full text-left rounded-xl px-3 py-2 text-sm transition-colors',
+                activeThread === thread.id ? 'bg-lavender text-indigo font-semibold' : 'text-ink-muted hover:bg-surface hover:text-indigo'
               )}
             >
               <p className="truncate">{thread.title}</p>
             </button>
           ))}
           {threads.length === 0 && (
-            <p className="text-xs text-gray-400 text-center py-8">Sin conversaciones aún</p>
+            <p className="text-xs text-ink-muted text-center py-8">Aún no tienes conversaciones</p>
           )}
         </div>
       </aside>
 
       {/* Main chat */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 bg-surface">
         {/* Contract selector */}
         {contracts.length > 0 && (
-          <div className="px-4 py-2 border-b border-gray-100 bg-white flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-500 font-medium">Contratos:</span>
+          <div className="px-4 py-2.5 border-b border-line bg-white flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-ink-muted font-medium">Pregunta sobre:</span>
             {contracts.map(c => (
               <button
                 key={c.id}
                 onClick={() => toggleContract(c.id)}
+                aria-pressed={selectedContracts.includes(c.id)}
                 className={cn(
-                  'text-xs rounded-full border px-2.5 py-0.5 transition-colors',
+                  'text-xs font-medium rounded-full border px-3 py-1 transition-colors',
                   selectedContracts.includes(c.id)
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300'
+                    ? 'bg-indigo border-indigo text-white'
+                    : 'bg-white border-line-strong text-ink-soft hover:border-violet hover:text-violet'
                 )}
               >
                 {c.contract_display_name}
@@ -172,102 +191,142 @@ export default function ChatPage() {
         )}
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {!activeThread && messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 mb-4">
-                <MessageCircle className="h-8 w-8 text-blue-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-1">Asistente Gotu</h3>
-              <p className="text-sm text-gray-500 max-w-sm">
-                Haz una pregunta sobre tus contratos. Selecciona uno o más contratos arriba para enfocar la conversación.
-              </p>
-            </div>
-          )}
-
-          {loadingMessages && (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-gray-300" />
-            </div>
-          )}
-
-          {messages.map(msg => (
-            <div key={msg.id} className={cn('flex', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
-              <div className={cn(
-                'rounded-2xl px-4 py-3 text-sm leading-relaxed',
-                msg.role === 'user'
-                  ? 'max-w-[75%] bg-blue-600 text-white rounded-br-sm'
-                  : 'max-w-[90%] bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm'
-              )}>
-                {msg.role === 'assistant' ? (
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                      ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
-                      ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
-                      li: ({ children }) => <li>{children}</li>,
-                      strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                      code: ({ children }) => <code className="bg-gray-100 rounded px-1 py-0.5 text-xs font-mono">{children}</code>,
-                      h3: ({ children }) => <h3 className="font-semibold mt-2 mb-1">{children}</h3>,
-                      h4: ({ children }) => <h4 className="font-medium mt-2 mb-1">{children}</h4>,
-                      // Tablas legibles, no comprimidas (obs. #17)
-                      table: ({ children }) => (
-                        <div className="my-2 overflow-x-auto rounded-lg border border-gray-200">
-                          <table className="w-full border-collapse text-xs">{children}</table>
-                        </div>
-                      ),
-                      thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
-                      th: ({ children }) => <th className="border-b border-gray-200 px-3 py-2 text-left font-semibold text-gray-700 whitespace-nowrap">{children}</th>,
-                      td: ({ children }) => <td className="border-b border-gray-100 px-3 py-2 align-top text-gray-700">{children}</td>,
-                      tr: ({ children }) => <tr>{children}</tr>,
-                    }}
-                  >
-                    {msg.content}
-                  </ReactMarkdown>
-                ) : (
-                  msg.content
-                )}
-              </div>
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex justify-start">
-              <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-                <div className="flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="h-1.5 w-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col gap-4 p-4 sm:p-6">
+            {!activeThread && messages.length === 0 && (
+              <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
+                <Mascot height={190} preload className="mb-4 w-28 sm:w-32" />
+                <h1 className="text-2xl font-bold text-indigo">¿Qué quieres saber de tu contrato?</h1>
+                <p className="mt-1 font-display text-base font-semibold text-violet">Pregunta. Entiende. Decide.</p>
+                <p className="mt-3 max-w-sm text-sm text-ink-muted">
+                  Escríbeme tu duda tal como la dirías. Te respondo en simple y te marco con{' '}
+                  <Spark className="-mt-0.5" /> la parte del contrato de donde sale.
+                  {contracts.length > 0 && ' Elige arriba uno o más contratos para enfocar la respuesta.'}
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {SUGGESTIONS.map(q => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => setInput(q)}
+                      className="rounded-full border border-line-strong bg-white px-3.5 py-2 text-sm font-medium text-indigo transition-colors hover:border-violet hover:bg-lavender"
+                    >
+                      {q}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div ref={messagesEndRef} />
+            {loadingMessages && (
+              <div className="flex justify-center py-10" role="status" aria-label="Cargando conversación">
+                <Loader2 className="h-6 w-6 animate-spin text-violet" aria-hidden />
+              </div>
+            )}
+
+            {messages.map(msg => (
+              <div key={msg.id} className={cn('flex items-end gap-2', msg.role === 'user' ? 'justify-end' : 'justify-start')}>
+                {msg.role !== 'user' && <AssistantAvatar size={32} className="mb-0.5" />}
+                <div className={cn(
+                  'min-w-0 rounded-2xl px-4 py-3 text-sm leading-relaxed break-words',
+                  msg.role === 'user'
+                    ? 'max-w-[80%] bg-indigo text-white font-medium rounded-br-md whitespace-pre-wrap'
+                    : 'max-w-[calc(100%-2.5rem)] sm:max-w-[85%] bg-lavender text-ink rounded-bl-md'
+                )}>
+                  {msg.role === 'assistant' ? (
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1 marker:text-violet">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1 marker:text-violet marker:font-semibold">{children}</ol>,
+                        li: ({ children }) => <li>{children}</li>,
+                        strong: ({ children }) => <strong className="font-semibold text-indigo">{children}</strong>,
+                        a: ({ children, href }) => <a href={href} className="font-medium text-violet underline underline-offset-2">{children}</a>,
+                        // Las citas textuales del contrato llevan la ✦ dorada de la marca
+                        blockquote: ({ children }) => (
+                          <blockquote className="relative my-2 rounded-xl border border-lavender-deep bg-white/70 py-2 pl-8 pr-3 text-ink-soft">
+                            <Spark className="absolute left-2.5 top-3" />
+                            {children}
+                          </blockquote>
+                        ),
+                        code: ({ children }) => {
+                          const text = typeof children === 'string' ? children : ''
+                          if (text.startsWith(CITATION_MARK)) {
+                            return (
+                              <span className="mx-0.5 inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-lavender-deep bg-white px-2 py-0.5 align-baseline text-xs font-semibold text-indigo">
+                                <Spark className="h-3 w-3" />
+                                {text.slice(CITATION_MARK.length)}
+                              </span>
+                            )
+                          }
+                          return <code className="bg-white/80 text-indigo rounded px-1 py-0.5 text-xs font-mono">{children}</code>
+                        },
+                        h3: ({ children }) => <h3 className="font-semibold text-indigo mt-2 mb-1">{children}</h3>,
+                        h4: ({ children }) => <h4 className="font-medium text-indigo mt-2 mb-1">{children}</h4>,
+                        // Tablas legibles, no comprimidas (obs. #17)
+                        table: ({ children }) => (
+                          <div className="my-2 overflow-x-auto rounded-lg border border-lavender-deep bg-white">
+                            <table className="w-full border-collapse text-xs">{children}</table>
+                          </div>
+                        ),
+                        thead: ({ children }) => <thead className="bg-surface">{children}</thead>,
+                        th: ({ children }) => <th className="border-b border-line-strong px-3 py-2 text-left font-semibold text-indigo whitespace-nowrap">{children}</th>,
+                        td: ({ children }) => <td className="border-b border-line px-3 py-2 align-top text-ink-soft">{children}</td>,
+                        tr: ({ children }) => <tr>{children}</tr>,
+                      }}
+                    >
+                      {markCitations(msg.content)}
+                    </ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex items-end gap-2 justify-start" role="status" aria-label="Gotu está escribiendo">
+                <AssistantAvatar size={32} className="mb-0.5" />
+                <div className="bg-lavender rounded-2xl rounded-bl-md px-4 py-3.5">
+                  <div className="flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-violet animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="h-1.5 w-1.5 rounded-full bg-gold animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
         {/* Input */}
-        <div className="border-t border-gray-100 bg-white p-4">
-          <div className="flex items-end gap-2">
-            <textarea
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-              placeholder="Escribe tu pregunta sobre el contrato..."
-              rows={1}
-              className="flex-1 resize-none rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all max-h-32 overflow-y-auto"
-              style={{ minHeight: '42px' }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || loading}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-            >
-              <Send className="h-4 w-4" />
-            </button>
+        <div className="border-t border-line bg-white p-3 sm:p-4">
+          <div className="mx-auto w-full max-w-3xl">
+            <div className="flex items-end gap-2">
+              <textarea
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+                placeholder="Pregúntale a Gotu sobre tu contrato…"
+                aria-label="Tu pregunta"
+                rows={1}
+                className="flex-1 resize-none rounded-2xl border border-line-strong bg-white px-4 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-all max-h-32 overflow-y-auto"
+                style={{ minHeight: '44px' }}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!input.trim() || loading}
+                aria-label="Enviar pregunta"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-indigo text-white hover:bg-violet disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+              >
+                <Send className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+            <p className="text-xs text-ink-muted mt-1.5 hidden sm:block">Enter para enviar, Shift+Enter para nueva línea</p>
           </div>
-          <p className="text-xs text-gray-400 mt-1.5">Enter para enviar, Shift+Enter para nueva línea</p>
         </div>
       </div>
     </div>

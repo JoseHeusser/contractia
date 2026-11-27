@@ -19,19 +19,19 @@ interface CollapsibleSectionProps {
 export function CollapsibleSection({ title, badge, defaultOpen = false, children }: CollapsibleSectionProps) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <section className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+    <section className="bg-white rounded-xl border border-line overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left hover:bg-gray-50/60 transition-colors"
+        className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left hover:bg-surface/60 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-base font-semibold text-ink">{title}</h2>
           {badge && (
-            <span className="text-xs text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">{badge}</span>
+            <span className="text-xs text-ink-muted bg-lavender rounded-full px-2 py-0.5">{badge}</span>
           )}
         </div>
-        <ChevronDown className={cn('h-4 w-4 text-gray-400 transition-transform', open && 'rotate-180')} />
+        <ChevronDown className={cn('h-4 w-4 text-ink-faint transition-transform', open && 'rotate-180')} />
       </button>
       {open && <div className="px-6 pb-6 pt-0">{children}</div>}
     </section>

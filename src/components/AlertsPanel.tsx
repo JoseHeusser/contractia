@@ -18,7 +18,7 @@ interface AlertsPanelProps {
 const severityConfig = {
   high: { icon: AlertCircle, color: 'text-red-600', bg: 'bg-red-50 border-red-100', badge: 'bg-red-100 text-red-700' },
   med: { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-50 border-amber-100', badge: 'bg-amber-100 text-amber-700' },
-  low: { icon: Info, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100', badge: 'bg-blue-100 text-blue-700' },
+  low: { icon: Info, color: 'text-violet', bg: 'bg-lavender border-lavender-deep', badge: 'bg-lavender-deep text-violet' },
 }
 
 const severityLabel = { high: 'Alta', med: 'Media', low: 'Baja' }
@@ -34,13 +34,13 @@ export function AlertsPanel({ alerts }: AlertsPanelProps) {
               <cfg.icon className={`h-4 w-4 mt-0.5 flex-shrink-0 ${cfg.color}`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <p className="text-sm font-medium text-gray-900">{alert.title}</p>
+                  <p className="text-sm font-medium text-ink">{alert.title}</p>
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cfg.badge}`}>
                     {severityLabel[alert.severity as keyof typeof severityLabel] ?? alert.severity}
                   </span>
                 </div>
-                <p className="text-xs text-gray-600">{alert.message}</p>
-                <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+                <p className="text-xs text-ink-muted">{alert.message}</p>
+                <div className="flex items-center gap-3 mt-1.5 text-xs text-ink-muted">
                   {alert.contracts && <span>{alert.contracts.contract_display_name}</span>}
                   {alert.due_date && <span>Vence: {formatDate(alert.due_date)}</span>}
                 </div>

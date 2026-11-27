@@ -46,7 +46,7 @@ export function AdminUsersTable({ profiles: initial }: AdminUsersTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-100 text-xs font-medium text-gray-500">
+          <tr className="border-b border-line text-xs font-medium text-ink-muted">
             <th className="px-5 py-3 text-left">Usuario</th>
             <th className="px-4 py-3 text-left">Rol</th>
             <th className="px-4 py-3 text-left">Plan</th>
@@ -55,26 +55,26 @@ export function AdminUsersTable({ profiles: initial }: AdminUsersTableProps) {
             <th className="px-4 py-3 text-left">Registrado</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-line">
           {profiles.map((profile) => (
-            <tr key={profile.id} className="hover:bg-gray-50/50 transition-colors">
+            <tr key={profile.id} className="hover:bg-surface/50 transition-colors">
               <td className="px-5 py-3.5">
-                <p className="font-medium text-gray-900">{profile.full_name ?? '—'}</p>
-                <p className="text-xs text-gray-500">{profile.email}</p>
+                <p className="font-medium text-ink">{profile.full_name ?? '—'}</p>
+                <p className="text-xs text-ink-muted">{profile.email}</p>
               </td>
               <td className="px-4 py-3.5">
                 <select
                   value={profile.role}
                   onChange={e => changeRole(profile.id, e.target.value)}
                   disabled={saving === profile.id}
-                  className="text-xs rounded-full border px-2 py-0.5 outline-none transition-colors bg-white border-gray-200"
+                  className="text-xs rounded-full border px-2 py-0.5 outline-none transition-colors bg-white border-line-strong"
                 >
                   <option value="user">user</option>
                   <option value="admin">admin</option>
                 </select>
               </td>
               <td className="px-4 py-3.5">
-                <span className="text-xs text-gray-600">{profile.plan}</span>
+                <span className="text-xs text-ink-muted">{profile.plan}</span>
               </td>
               <td className="px-4 py-3.5">
                 {editingLimit === profile.id ? (
@@ -83,16 +83,16 @@ export function AdminUsersTable({ profiles: initial }: AdminUsersTableProps) {
                       type="number"
                       value={limitValue}
                       onChange={e => setLimitValue(e.target.value)}
-                      className="w-16 text-xs border border-blue-300 rounded px-1.5 py-0.5 outline-none"
+                      className="w-16 text-xs border border-violet/50 rounded px-1.5 py-0.5 outline-none"
                       autoFocus
                     />
-                    <button onClick={() => saveLimit(profile.id)} className="text-xs text-blue-600 hover:underline">OK</button>
-                    <button onClick={() => setEditingLimit(null)} className="text-xs text-gray-400 hover:underline">✕</button>
+                    <button onClick={() => saveLimit(profile.id)} className="text-xs text-violet hover:underline">OK</button>
+                    <button onClick={() => setEditingLimit(null)} className="text-xs text-ink-faint hover:underline">✕</button>
                   </div>
                 ) : (
                   <button
                     onClick={() => { setEditingLimit(profile.id); setLimitValue(String(profile.contracts_limit)) }}
-                    className="text-xs text-gray-600 hover:text-blue-600 transition-colors"
+                    className="text-xs text-ink-muted hover:text-violet transition-colors"
                   >
                     {profile.contracts_limit}
                   </button>
@@ -107,10 +107,10 @@ export function AdminUsersTable({ profiles: initial }: AdminUsersTableProps) {
                     disabled={saving === profile.id}
                     className="sr-only peer"
                   />
-                  <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500" />
+                  <div className="w-9 h-5 bg-lavender-deep peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-line-strong after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500" />
                 </label>
               </td>
-              <td className="px-4 py-3.5 text-xs text-gray-500">
+              <td className="px-4 py-3.5 text-xs text-ink-muted">
                 {formatDate(profile.created_at)}
               </td>
             </tr>
