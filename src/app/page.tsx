@@ -11,7 +11,7 @@ export default function LandingPage() {
             <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
               <FileText className="h-4 w-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900 text-lg">ContractIA</span>
+            <span className="font-bold text-gray-900 text-lg">Gotu</span>
           </div>
           <div className="flex items-center gap-3">
             <Link
@@ -104,7 +104,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-gray-100 py-8">
         <div className="mx-auto max-w-6xl px-6 text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} ContractIA. Plataforma de análisis de contratos de salud para Chile.
+          © {new Date().getFullYear()} Gotu. Plataforma de análisis de contratos de salud para Chile.
         </div>
       </footer>
     </div>

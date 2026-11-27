@@ -46,7 +46,7 @@ export function Sidebar({ userName, userEmail, isAdmin }: SidebarProps) {
           <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
             <FileText className="h-4 w-4 text-white" />
           </div>
-          <span className="font-bold text-gray-900 text-base">ContractIA</span>
+          <span className="font-bold text-gray-900 text-base">Gotu</span>
         </div>
       </div>
 
@@ -122,7 +122,7 @@ export function Sidebar({ userName, userEmail, isAdmin }: SidebarProps) {
           <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
             <FileText className="h-3.5 w-3.5 text-white" />
           </div>
-          <span className="font-bold text-gray-900">ContractIA</span>
+          <span className="font-bold text-gray-900">Gotu</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="p-1.5 rounded-lg hover:bg-gray-100">
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

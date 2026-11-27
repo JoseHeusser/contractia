@@ -178,7 +178,7 @@ export default function ChatPage() {
               <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 mb-4">
                 <MessageCircle className="h-8 w-8 text-blue-400" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">Asistente ContractIA</h3>
+              <h3 className="font-semibold text-gray-900 mb-1">Asistente Gotu</h3>
               <p className="text-sm text-gray-500 max-w-sm">
                 Haz una pregunta sobre tus contratos. Selecciona uno o más contratos arriba para enfocar la conversación.
               </p>
