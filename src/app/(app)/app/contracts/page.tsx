@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ContractCard } from '@/components/ContractCard'
-import { Upload, FileText } from 'lucide-react'
+import { Upload } from 'lucide-react'
+import { Mascot } from '@/components/Mascot'
 
 export default async function ContractsPage() {
   const supabase = await createClient()
@@ -17,14 +18,14 @@ export default async function ContractsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Mis Contratos</h1>
-          <p className="text-sm text-gray-500 mt-1">{contracts?.length ?? 0} contrato{contracts?.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-bold text-ink">Mis contratos</h1>
+          <p className="text-sm text-ink-muted mt-1">{contracts?.length ?? 0} contrato{contracts?.length !== 1 ? 's' : ''}</p>
         </div>
         <Link
           href="/app/contracts/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet transition-colors"
         >
           <Upload className="h-4 w-4" />
           Subir contrato
@@ -38,17 +39,15 @@ export default async function ContractsPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 mb-4">
-            <FileText className="h-8 w-8 text-blue-400" />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">Sin contratos aún</h3>
-          <p className="text-sm text-gray-500 mb-6 max-w-sm">
-            Sube tu póliza de isapre, seguro complementario o cualquier contrato de salud para comenzar.
+        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-line-strong bg-white px-6 py-16 text-center">
+          <Mascot height={170} className="mb-5 w-28" />
+          <h2 className="text-xl font-semibold text-indigo mb-1">Aún no tienes contratos</h2>
+          <p className="text-sm text-ink-muted mb-6 max-w-sm">
+            Sube el PDF de tu isapre, seguro complementario o cualquier contrato de salud y te lo explico en simple.
           </p>
           <Link
             href="/app/contracts/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet transition-colors"
           >
             <Upload className="h-4 w-4" />
             Subir primer contrato

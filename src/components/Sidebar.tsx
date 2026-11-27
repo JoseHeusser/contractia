@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, FileText, Shield, MessageCircle, Users, LogOut, Menu, X, GitCompare } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
@@ -14,11 +15,11 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { href: '/app', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/app', label: 'Inicio', icon: LayoutDashboard, exact: true },
   { href: '/app/contracts', label: 'Contratos', icon: FileText },
   { href: '/app/benefits', label: 'Beneficios', icon: Shield },
   { href: '/app/comparar', label: 'Comparar', icon: GitCompare },
-  { href: '/app/chat', label: 'Asistente IA', icon: MessageCircle },
+  { href: '/app/chat', label: 'Pregúntale a Gotu', icon: MessageCircle },
 ]
 
 export function Sidebar({ userName, userEmail, isAdmin }: SidebarProps) {
@@ -38,71 +39,80 @@ export function Sidebar({ userName, userEmail, isAdmin }: SidebarProps) {
     return pathname.startsWith(href)
   }
 
+  const linkClass = (active: boolean) =>
+    cn(
+      'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors',
+      active
+        ? 'bg-lavender text-indigo font-semibold'
+        : 'text-ink-muted font-medium hover:bg-surface hover:text-indigo'
+    )
+
+  const iconClass = (active: boolean) =>
+    cn('h-[18px] w-[18px] flex-shrink-0', active ? 'text-violet' : 'text-ink-faint group-hover:text-violet')
+
   const sidebarContent = (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-4 py-5 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center flex-shrink-0">
-            <FileText className="h-4 w-4 text-white" />
-          </div>
-          <span className="font-bold text-gray-900 text-base">Gotu</span>
-        </div>
+      <div className="px-5 pt-5 pb-4">
+        <Link href="/app" onClick={() => setMobileOpen(false)} aria-label="Gotu, ir al inicio" className="inline-flex rounded-lg">
+          <Logo size="md" />
+        </Link>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setMobileOpen(false)}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-              isActive(item.href, item.exact)
-                ? 'bg-blue-50 text-blue-700'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            )}
-          >
-            <item.icon className="h-4 w-4 flex-shrink-0" />
-            {item.label}
-          </Link>
-        ))}
+      <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+        {navItems.map((item) => {
+          const active = isActive(item.href, item.exact)
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              aria-current={active ? 'page' : undefined}
+              className={linkClass(active)}
+            >
+              <item.icon className={iconClass(active)} aria-hidden />
+              {item.label}
+            </Link>
+          )
+        })}
         {isAdmin && (
           <Link
             href="/app/admin"
             onClick={() => setMobileOpen(false)}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-              isActive('/app/admin')
-                ? 'bg-purple-50 text-purple-700'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-            )}
+            aria-current={isActive('/app/admin') ? 'page' : undefined}
+            className={linkClass(isActive('/app/admin'))}
           >
-            <Users className="h-4 w-4 flex-shrink-0" />
+            <Users className={iconClass(isActive('/app/admin'))} aria-hidden />
             Admin
           </Link>
         )}
       </nav>
 
+      {/* Lema */}
+      <p className="px-5 pb-3 font-display text-sm font-semibold text-violet">
+        Pregunta. Entiende. Decide.
+      </p>
+
       {/* User */}
-      <div className="border-t border-gray-100 p-3">
+      <div className="border-t border-line p-3">
         <div className="flex items-center gap-3 px-2 py-2">
-          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-semibold text-blue-700">
+          <div className="h-9 w-9 rounded-full bg-indigo flex items-center justify-center flex-shrink-0">
+            <span className="font-display text-sm font-semibold text-white">
               {userName.charAt(0).toUpperCase()}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
-            <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+            <p className="text-sm font-medium text-ink truncate">{userName}</p>
+            <p className="text-xs text-ink-muted truncate">{userEmail}</p>
           </div>
           <button
             onClick={handleLogout}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="rounded-lg p-2 text-ink-faint hover:bg-lavender hover:text-indigo transition-colors"
             title="Cerrar sesión"
+            aria-label="Cerrar sesión"
           >
-            <LogOut className="h-4 w-4" />
+            <LogOut className="h-4 w-4" aria-hidden />
           </button>
         </div>
       </div>
@@ -112,28 +122,30 @@ export function Sidebar({ userName, userEmail, isAdmin }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-60 bg-white border-r border-gray-100 flex-shrink-0">
+      <aside className="hidden md:flex flex-col w-60 bg-white border-r border-line flex-shrink-0">
         {sidebarContent}
       </aside>
 
       {/* Mobile topbar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
-            <FileText className="h-3.5 w-3.5 text-white" />
-          </div>
-          <span className="font-bold text-gray-900">Gotu</span>
-        </div>
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="p-1.5 rounded-lg hover:bg-gray-100">
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white/95 backdrop-blur border-b border-line px-4 flex items-center justify-between">
+        <Link href="/app" aria-label="Gotu, ir al inicio" className="inline-flex rounded-lg">
+          <Logo size="sm" />
+        </Link>
+        <button
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label={mobileOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={mobileOpen}
+          className="p-2 rounded-lg text-indigo hover:bg-lavender transition-colors"
+        >
+          {mobileOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
         </button>
       </div>
 
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="md:hidden fixed inset-0 z-20">
-          <div className="absolute inset-0 bg-black/20" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute left-0 top-0 bottom-0 w-60 bg-white shadow-xl">
+          <div className="absolute inset-0 bg-indigo-deep/40" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute left-0 top-14 bottom-0 w-64 bg-white shadow-xl">
             {sidebarContent}
           </aside>
         </div>

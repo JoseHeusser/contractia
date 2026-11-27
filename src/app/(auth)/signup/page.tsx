@@ -60,13 +60,13 @@ export default function SignupPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">¡Cuenta creada!</h2>
-        <p className="text-gray-600 mb-6">
-          Revisa tu email <strong>{email}</strong> para confirmar tu cuenta y comenzar.
+        <h2 className="text-2xl font-bold text-indigo mb-2">¡Listo, ya tienes cuenta!</h2>
+        <p className="text-ink-muted mb-6">
+          Te enviamos un correo a <strong className="text-ink">{email}</strong>. Confírmalo y podrás subir tu primer contrato.
         </p>
         <Link
           href="/login"
-          className="text-sm font-medium text-blue-600 hover:underline"
+          className="text-sm font-semibold text-violet underline-offset-2 hover:underline"
         >
           Volver a iniciar sesión
         </Link>
@@ -76,17 +76,17 @@ export default function SignupPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Crear cuenta</h1>
-      <p className="text-sm text-gray-500 mb-6">
-        ¿Ya tienes cuenta?{' '}
-        <Link href="/login" className="text-blue-600 hover:underline font-medium">
+      <h1 className="text-2xl font-bold text-indigo mb-1">Crea tu cuenta</h1>
+      <p className="text-sm text-ink-muted mb-6">
+        Es gratis y toma un minuto. ¿Ya tienes cuenta?{' '}
+        <Link href="/login" className="text-violet underline-offset-2 hover:underline font-semibold">
           Iniciar sesión
         </Link>
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="fullName" className="block text-sm font-medium text-ink-soft mb-1.5">
             Nombre completo
           </label>
           <input
@@ -96,13 +96,13 @@ export default function SignupPage() {
             autoComplete="name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full rounded-xl border border-line-strong px-3.5 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-all"
             placeholder="Ana García"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="email" className="block text-sm font-medium text-ink-soft mb-1.5">
             Email
           </label>
           <input
@@ -112,13 +112,13 @@ export default function SignupPage() {
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full rounded-xl border border-line-strong px-3.5 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-all"
             placeholder="tu@email.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="password" className="block text-sm font-medium text-ink-soft mb-1.5">
             Contraseña
           </label>
           <input
@@ -128,13 +128,13 @@ export default function SignupPage() {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full rounded-xl border border-line-strong px-3.5 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-all"
             placeholder="Mínimo 8 caracteres"
           />
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-ink-soft mb-1.5">
             Confirmar contraseña
           </label>
           <input
@@ -144,7 +144,7 @@ export default function SignupPage() {
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full rounded-xl border border-line-strong px-3.5 py-2.5 text-sm text-ink placeholder-ink-faint outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-all"
             placeholder="Repite tu contraseña"
           />
         </div>
@@ -158,12 +158,12 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full rounded-xl bg-indigo px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? 'Creando cuenta...' : 'Crear cuenta'}
+          {loading ? 'Creando cuenta…' : 'Crear cuenta'}
         </button>
 
-        <p className="text-xs text-center text-gray-400">
+        <p className="text-xs text-center text-ink-muted">
           Al crear una cuenta aceptas nuestros términos de servicio y política de privacidad.
         </p>
       </form>

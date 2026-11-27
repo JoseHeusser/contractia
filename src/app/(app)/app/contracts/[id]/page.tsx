@@ -52,13 +52,13 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
         <div>
           <div className="flex items-center gap-2 mb-1">
             <StatusBadge status={contract.status} />
-            <span className="text-xs text-gray-400 bg-gray-50 border border-gray-100 rounded-full px-2.5 py-0.5">
+            <span className="text-xs text-ink-faint bg-surface border border-line rounded-full px-2.5 py-0.5">
               {categoryLabel(contract.category)}
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mt-2">{contract.contract_display_name}</h1>
+          <h1 className="text-2xl font-bold text-ink mt-2">{contract.contract_display_name}</h1>
           {contract.provider_name && (
-            <p className="text-gray-500 mt-0.5">{contract.provider_name}</p>
+            <p className="text-ink-muted mt-0.5">{contract.provider_name}</p>
           )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
@@ -67,7 +67,7 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
           {isReady && <EditContractButton contract={contract} />}
           <Link
             href={`/app/chat?contractId=${id}`}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo px-4 py-2.5 text-sm font-semibold text-white hover:bg-violet transition-colors"
           >
             <MessageCircle className="h-4 w-4" />
             Consultar al asistente
@@ -90,15 +90,15 @@ export default async function ContractDetailPage({ params }: { params: Promise<{
           {visibleAlerts.map((alert: Alert) => (
             <div key={alert.id} className={`flex items-start gap-3 rounded-xl border p-4 ${
               alert.severity === 'high' ? 'bg-red-50 border-red-100' :
-              alert.severity === 'med' ? 'bg-amber-50 border-amber-100' : 'bg-blue-50 border-blue-100'
+              alert.severity === 'med' ? 'bg-amber-50 border-amber-100' : 'bg-lavender border-lavender-deep'
             }`}>
               <AlertTriangle className={`h-4 w-4 mt-0.5 flex-shrink-0 ${
                 alert.severity === 'high' ? 'text-red-500' :
-                alert.severity === 'med' ? 'text-amber-500' : 'text-blue-500'
+                alert.severity === 'med' ? 'text-amber-500' : 'text-violet'
               }`} />
               <div>
-                <p className="text-sm font-medium text-gray-900">{alert.title}</p>
-                <p className="text-xs text-gray-600 mt-0.5">{alert.message}</p>
+                <p className="text-sm font-medium text-ink">{alert.title}</p>
+                <p className="text-xs text-ink-muted mt-0.5">{alert.message}</p>
               </div>
             </div>
           ))}
@@ -127,7 +127,7 @@ function ContractTabs({
       {/* Summary */}
       <CollapsibleSection title="Resumen" defaultOpen>
         {contract.ai_summary_simple && (
-          <p className="text-sm text-gray-700 leading-relaxed mb-5 p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <p className="text-sm text-ink-soft leading-relaxed mb-5 p-4 bg-lavender rounded-lg border border-lavender-deep">
             {contract.ai_summary_simple}
           </p>
         )}
@@ -141,16 +141,16 @@ function ContractTabs({
           ].map(({ label, value, icon: Icon, fieldKey }) => {
             const snippet = getSnippet(fieldKey)
             return (
-              <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
-                <Icon className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div key={label} className="flex items-start gap-3 p-3 rounded-lg bg-surface">
+                <Icon className="h-4 w-4 text-ink-faint mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-xs text-gray-500">{label}</p>
+                  <p className="text-xs text-ink-muted">{label}</p>
                   {snippet ? (
                     <EvidencePopover snippet={snippet.snippet} page={snippet.page} fieldKey={fieldKey}>
-                      <span className="text-sm font-medium text-gray-900">{value}</span>
+                      <span className="text-sm font-medium text-ink">{value}</span>
                     </EvidencePopover>
                   ) : (
-                    <p className="text-sm font-medium text-gray-900">{value}</p>
+                    <p className="text-sm font-medium text-ink">{value}</p>
                   )}
                 </div>
               </div>
@@ -170,11 +170,11 @@ function ContractTabs({
         )}
 
         {Array.isArray(contract.missing_references) && contract.missing_references.length > 0 && (
-          <div className="mt-3 rounded-lg bg-blue-50 border border-blue-100 p-3 flex gap-2">
-            <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div className="mt-3 rounded-lg bg-lavender border border-lavender-deep p-3 flex gap-2">
+            <Info className="h-4 w-4 text-violet flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-xs font-medium text-blue-800 mb-0.5">Para un análisis más completo</p>
-              <p className="text-xs text-blue-700">
+              <p className="text-xs font-medium text-indigo mb-0.5">Para un análisis más completo</p>
+              <p className="text-xs text-violet">
                 Este contrato menciona otros documentos: {(contract.missing_references as string[]).join(', ')}.
                 Si los tienes, puedes adjuntarlos con <strong>Agregar documento</strong>. No es obligatorio.
               </p>
@@ -191,13 +191,13 @@ function ContractTabs({
             const snippet = getSnippet('copay')
             const value = contract.copay_summary ?? '—'
             return (
-              <div className="rounded-lg border border-gray-100 p-3">
-                <p className="text-xs font-medium text-gray-500 mb-1.5">Copago</p>
+              <div className="rounded-lg border border-line p-3">
+                <p className="text-xs font-medium text-ink-muted mb-1.5">Copago</p>
                 {snippet ? (
                   <EvidencePopover snippet={snippet.snippet} page={snippet.page} fieldKey="copay">
-                    <span className="text-sm text-gray-700">{value}</span>
+                    <span className="text-sm text-ink-soft">{value}</span>
                   </EvidencePopover>
-                ) : <p className="text-sm text-gray-700">{value}</p>}
+                ) : <p className="text-sm text-ink-soft">{value}</p>}
               </div>
             )
           })()}
@@ -207,13 +207,13 @@ function ContractTabs({
             const snippet = getSnippet('deductible')
             const value = contract.deductible_summary ?? '—'
             return (
-              <div className="rounded-lg border border-gray-100 p-3">
-                <p className="text-xs font-medium text-gray-500 mb-1.5">Deducible</p>
+              <div className="rounded-lg border border-line p-3">
+                <p className="text-xs font-medium text-ink-muted mb-1.5">Deducible</p>
                 {snippet ? (
                   <EvidencePopover snippet={snippet.snippet} page={snippet.page} fieldKey="deductible">
-                    <span className="text-sm text-gray-700">{value}</span>
+                    <span className="text-sm text-ink-soft">{value}</span>
                   </EvidencePopover>
-                ) : <p className="text-sm text-gray-700">{value}</p>}
+                ) : <p className="text-sm text-ink-soft">{value}</p>}
               </div>
             )
           })()}
@@ -241,16 +241,16 @@ function ContractTabs({
               )
             }
             return (
-              <div className="rounded-lg border border-gray-100 p-3">
+              <div className="rounded-lg border border-line p-3">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <p className="text-xs font-medium text-gray-500">Reajuste de precio</p>
+                  <p className="text-xs font-medium text-ink-muted">Reajuste de precio</p>
                   {badgeEl}
                 </div>
                 {snippet ? (
                   <EvidencePopover snippet={snippet.snippet} page={snippet.page} fieldKey="price_adjustment">
-                    <span className="text-sm text-gray-700">{displayValue}</span>
+                    <span className="text-sm text-ink-soft">{displayValue}</span>
                   </EvidencePopover>
-                ) : <p className="text-sm text-gray-700">{displayValue}</p>}
+                ) : <p className="text-sm text-ink-soft">{displayValue}</p>}
               </div>
             )
           })()}
@@ -260,13 +260,13 @@ function ContractTabs({
             const snippet = getSnippet('cancellation')
             const value = contract.cancellation_summary ?? '—'
             return (
-              <div className="rounded-lg border border-gray-100 p-3">
-                <p className="text-xs font-medium text-gray-500 mb-1.5">Cancelación</p>
+              <div className="rounded-lg border border-line p-3">
+                <p className="text-xs font-medium text-ink-muted mb-1.5">Cancelación</p>
                 {snippet ? (
                   <EvidencePopover snippet={snippet.snippet} page={snippet.page} fieldKey="cancellation">
-                    <span className="text-sm text-gray-700">{value}</span>
+                    <span className="text-sm text-ink-soft">{value}</span>
                   </EvidencePopover>
-                ) : <p className="text-sm text-gray-700">{value}</p>}
+                ) : <p className="text-sm text-ink-soft">{value}</p>}
               </div>
             )
           })()}
@@ -276,13 +276,13 @@ function ContractTabs({
             const snippet = getSnippet('reimbursement')
             const value = contract.reimbursement_summary ?? '—'
             return (
-              <div className="rounded-lg border border-gray-100 p-3">
-                <p className="text-xs font-medium text-gray-500 mb-1.5">Cómo reclamar</p>
+              <div className="rounded-lg border border-line p-3">
+                <p className="text-xs font-medium text-ink-muted mb-1.5">Cómo reclamar</p>
                 {snippet ? (
                   <EvidencePopover snippet={snippet.snippet} page={snippet.page} fieldKey="reimbursement">
-                    <span className="text-sm text-gray-700">{value}</span>
+                    <span className="text-sm text-ink-soft">{value}</span>
                   </EvidencePopover>
-                ) : <p className="text-sm text-gray-700">{value}</p>}
+                ) : <p className="text-sm text-ink-soft">{value}</p>}
               </div>
             )
           })()}
@@ -292,13 +292,13 @@ function ContractTabs({
             const snippet = getSnippet('privacy')
             const value = contract.privacy_summary ?? '—'
             return (
-              <div className="rounded-lg border border-gray-100 p-3">
-                <p className="text-xs font-medium text-gray-500 mb-1.5">Privacidad</p>
+              <div className="rounded-lg border border-line p-3">
+                <p className="text-xs font-medium text-ink-muted mb-1.5">Privacidad</p>
                 {snippet ? (
                   <EvidencePopover snippet={snippet.snippet} page={snippet.page} fieldKey="privacy">
-                    <span className="text-sm text-gray-700">{value}</span>
+                    <span className="text-sm text-ink-soft">{value}</span>
                   </EvidencePopover>
-                ) : <p className="text-sm text-gray-700">{value}</p>}
+                ) : <p className="text-sm text-ink-soft">{value}</p>}
               </div>
             )
           })()}
@@ -310,7 +310,7 @@ function ContractTabs({
         {benefits.length > 0 ? (
           <BenefitsList benefits={benefits} />
         ) : (
-          <p className="text-sm text-gray-500 text-center py-6">No se detectaron coberturas individuales en este contrato.</p>
+          <p className="text-sm text-ink-muted text-center py-6">No se detectaron coberturas individuales en este contrato.</p>
         )}
       </CollapsibleSection>
 
@@ -319,30 +319,30 @@ function ContractTabs({
         <div className="space-y-4">
           {(contract.cancellation_summary || contract.cancellation_notice_days) && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">Cancelación</p>
-              <p className="text-sm text-gray-700">{contract.cancellation_summary}</p>
+              <p className="text-xs font-medium text-ink-muted mb-1">Cancelación</p>
+              <p className="text-sm text-ink-soft">{contract.cancellation_summary}</p>
               {contract.cancellation_notice_days && (
-                <p className="text-xs text-gray-500 mt-0.5">Aviso previo: {contract.cancellation_notice_days} días</p>
+                <p className="text-xs text-ink-muted mt-0.5">Aviso previo: {contract.cancellation_notice_days} días</p>
               )}
             </div>
           )}
 
           {(contract.claims_phone || contract.claims_email || contract.claims_url) && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">Canales de reclamo / siniestro</p>
+              <p className="text-xs font-medium text-ink-muted mb-1">Canales de reclamo / siniestro</p>
               <div className="flex flex-wrap gap-3">
                 {contract.claims_phone && (
-                  <a href={`tel:${contract.claims_phone}`} className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
+                  <a href={`tel:${contract.claims_phone}`} className="inline-flex items-center gap-1.5 text-sm text-violet hover:underline">
                     <Phone className="h-3.5 w-3.5" /> {contract.claims_phone}
                   </a>
                 )}
                 {contract.claims_email && (
-                  <a href={`mailto:${contract.claims_email}`} className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
+                  <a href={`mailto:${contract.claims_email}`} className="inline-flex items-center gap-1.5 text-sm text-violet hover:underline">
                     <Mail className="h-3.5 w-3.5" /> {contract.claims_email}
                   </a>
                 )}
                 {contract.claims_url && (
-                  <a href={contract.claims_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline">
+                  <a href={contract.claims_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm text-violet hover:underline">
                     <Globe className="h-3.5 w-3.5" /> Portal web
                   </a>
                 )}
@@ -352,11 +352,11 @@ function ContractTabs({
 
           {Array.isArray(contract.exclusions) && contract.exclusions.length > 0 && (
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-2">Exclusiones</p>
+              <p className="text-xs font-medium text-ink-muted mb-2">Exclusiones</p>
               <ul className="space-y-1">
                 {(contract.exclusions as Array<{ description: string }>).map((ex, i) => (
-                  <li key={i} className="text-xs text-gray-600 flex items-start gap-2">
-                    <span className="text-gray-300 mt-0.5">•</span>
+                  <li key={i} className="text-xs text-ink-muted flex items-start gap-2">
+                    <span className="text-lavender-deep mt-0.5">•</span>
                     {ex.description}
                   </li>
                 ))}

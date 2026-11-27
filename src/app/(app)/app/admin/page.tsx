@@ -24,8 +24,8 @@ export default async function AdminPage() {
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Panel de administración</h1>
-        <p className="text-sm text-gray-500 mt-1">Gestión de usuarios y actividad de la plataforma</p>
+        <h1 className="text-2xl font-bold text-ink">Panel de administración</h1>
+        <p className="text-sm text-ink-muted mt-1">Gestión de usuarios y actividad de la plataforma</p>
       </div>
 
       {/* Stats */}
@@ -35,17 +35,17 @@ export default async function AdminPage() {
           { label: 'Usuarios activos', value: activeUsers },
           { label: 'Contratos este mes', value: contractsThisMonth },
         ].map(stat => (
-          <div key={stat.label} className="bg-white rounded-xl border border-gray-100 p-4">
-            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{stat.label}</p>
+          <div key={stat.label} className="bg-white rounded-xl border border-line p-4">
+            <p className="text-2xl font-bold text-ink">{stat.value}</p>
+            <p className="text-xs text-ink-muted mt-0.5">{stat.label}</p>
           </div>
         ))}
       </div>
 
       {/* Users table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Usuarios</h2>
+      <div className="bg-white rounded-xl border border-line overflow-hidden">
+        <div className="px-5 py-4 border-b border-line">
+          <h2 className="font-semibold text-ink">Usuarios</h2>
         </div>
         <AdminUsersTable profiles={profiles ?? []} />
       </div>

@@ -68,18 +68,18 @@ export function EditContractButton({ contract }: { contract: EditableContract })
     <>
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:border-blue-200 hover:text-blue-600 transition-colors"
+        className="inline-flex items-center gap-2 rounded-xl border border-line-strong px-3 py-2 text-sm font-medium text-ink-muted hover:border-lavender-deep hover:text-violet transition-colors"
       >
         <Pencil className="h-4 w-4" />
         Editar
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-indigo-deep/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-              <h3 className="font-semibold text-gray-900">Editar contrato</h3>
-              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600">
+            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+              <h3 className="font-semibold text-ink">Editar contrato</h3>
+              <button onClick={() => setOpen(false)} aria-label="Cerrar" className="rounded-lg p-1 text-ink-faint hover:bg-lavender hover:text-indigo">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -115,11 +115,11 @@ export function EditContractButton({ contract }: { contract: EditableContract })
 
               {error && <p className="text-sm text-red-600">{error}</p>}
             </div>
-            <div className="flex justify-end gap-2 border-t border-gray-100 px-5 py-4">
-              <button onClick={() => setOpen(false)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <div className="flex justify-end gap-2 border-t border-line px-5 py-4">
+              <button onClick={() => setOpen(false)} className="rounded-xl border border-line-strong px-4 py-2 text-sm font-medium text-ink-soft hover:bg-surface">
                 Cancelar
               </button>
-              <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+              <button onClick={handleSave} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-indigo px-4 py-2 text-sm font-semibold text-white hover:bg-violet disabled:opacity-50">
                 {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</> : 'Guardar cambios'}
               </button>
             </div>
@@ -130,12 +130,12 @@ export function EditContractButton({ contract }: { contract: EditableContract })
   )
 }
 
-const inputCls = 'w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all bg-white'
+const inputCls = 'w-full rounded-xl border border-line-strong px-3 py-2 text-sm text-ink outline-none focus:border-violet focus:ring-2 focus:ring-violet/30 transition-all bg-white'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-ink-muted mb-1">{label}</label>
       {children}
     </div>
   )

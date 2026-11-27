@@ -24,7 +24,7 @@ export function DeleteContractButton({ contractId }: { contractId: string }) {
   if (confirming) {
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">¿Eliminar contrato?</span>
+        <span className="text-sm text-ink-muted">¿Eliminar contrato?</span>
         <button
           onClick={handleDelete}
           disabled={loading}
@@ -35,7 +35,7 @@ export function DeleteContractButton({ contractId }: { contractId: string }) {
         <button
           onClick={() => setConfirming(false)}
           disabled={loading}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+          className="rounded-xl border border-line-strong px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-surface transition-colors"
         >
           Cancelar
         </button>
@@ -46,7 +46,7 @@ export function DeleteContractButton({ contractId }: { contractId: string }) {
   return (
     <button
       onClick={() => setConfirming(true)}
-      className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:border-red-200 hover:text-red-600 transition-colors"
+      className="inline-flex items-center gap-2 rounded-xl border border-line-strong px-3 py-2 text-sm font-medium text-ink-muted hover:border-red-200 hover:text-red-600 transition-colors"
     >
       <Trash2 className="h-4 w-4" />
       Eliminar

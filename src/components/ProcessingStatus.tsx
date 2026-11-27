@@ -55,8 +55,8 @@ export function ProcessingStatus({ contractId, initialStatus }: ProcessingStatus
   const isDone = status === 'ready' || status === 'needs_review'
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-6">
-      <h3 className="text-sm font-semibold text-gray-700 mb-5">Procesando contrato...</h3>
+    <div className="bg-white rounded-xl border border-line p-6">
+      <h3 className="text-sm font-semibold text-ink-soft mb-5">Procesando contrato...</h3>
       <div className="space-y-3">
         {STEPS.map((step, i) => {
           const stepOrder = i
@@ -69,24 +69,24 @@ export function ProcessingStatus({ contractId, initialStatus }: ProcessingStatus
               <div className={cn(
                 'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full',
                 isCompleted ? 'bg-green-100' :
-                isCurrentStep ? 'bg-blue-100' :
-                isFailed ? 'bg-red-100' : 'bg-gray-100'
+                isCurrentStep ? 'bg-lavender-deep' :
+                isFailed ? 'bg-red-100' : 'bg-lavender'
               )}>
                 {isCompleted ? (
                   <CheckCircle className="h-3.5 w-3.5 text-green-600" />
                 ) : isCurrentStep ? (
-                  <Loader2 className="h-3.5 w-3.5 text-blue-600 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 text-violet animate-spin" />
                 ) : isFailed ? (
                   <XCircle className="h-3.5 w-3.5 text-red-600" />
                 ) : (
-                  <span className="h-2 w-2 rounded-full bg-gray-300" />
+                  <span className="h-2 w-2 rounded-full bg-line-strong" />
                 )}
               </div>
               <span className={cn(
                 'text-sm',
-                isCompleted ? 'text-gray-700 font-medium' :
-                isCurrentStep ? 'text-blue-700 font-medium' :
-                isFailed ? 'text-red-700' : 'text-gray-400'
+                isCompleted ? 'text-ink-soft font-medium' :
+                isCurrentStep ? 'text-violet font-medium' :
+                isFailed ? 'text-red-700' : 'text-ink-faint'
               )}>
                 {step.label}
               </span>
