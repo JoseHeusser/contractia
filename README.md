@@ -1,12 +1,12 @@
-# ContractIA — Análisis de contratos de salud chilenos con IA
+# Gotu — Análisis de contratos de salud chilenos con IA
 
 AI-powered platform that explains Chilean health insurance contracts (Isapres) in plain language. Upload a contract PDF, get the key benefits, exclusions, and personalized alerts in minutes.
 
-> 🔗 **Live:** <https://contractia-one.vercel.app>
+> 🔗 **Live:** <https://gotu.cl>
 
 ## Why
 
-Chilean private health insurance contracts are long, technical, and intentionally opaque. ContractIA reads the contract for you, surfaces the clauses that actually matter, and lets you chat with an AI to drill into specifics — with citations back to the source contract.
+Chilean private health insurance contracts are long, technical, and intentionally opaque. Gotu reads the contract for you, surfaces the clauses that actually matter, and lets you chat with an AI to drill into specifics — with citations back to the source contract.
 
 ## Stack
 

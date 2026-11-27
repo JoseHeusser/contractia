@@ -130,7 +130,7 @@ async function answerFromSQL(
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 512,
       system:
-        'Eres el asistente de ContractIA. Responde la pregunta del usuario usando ÚNICAMENTE los datos estructurados del contrato proporcionados. Responde en español, lenguaje simple y directo. Si los datos no son suficientes para responder, responde exactamente con: NO_DATA',
+        'Eres el asistente de Gotu. Responde la pregunta del usuario usando ÚNICAMENTE los datos estructurados del contrato proporcionados. Responde en español, lenguaje simple y directo. Si los datos no son suficientes para responder, responde exactamente con: NO_DATA',
       messages: [
         {
           role: 'user',
@@ -364,8 +364,8 @@ async function askClaude(
     : ''
 
   const systemPrompt = noContractsSelected
-    ? `Eres el asistente de ContractIA, especializado en contratos de salud chilenos (isapres, seguros complementarios). Responde preguntas generales sobre salud en Chile de forma clara y en español. Si se incluye "Información normativa", úsala como fuente (GES, CAE, Ley Ricarte Soto, etc.). Si la pregunta menciona un código FONASA, interprétalo como código de prestación. Recomienda al usuario seleccionar un contrato para obtener respuestas específicas sobre sus coberturas.`
-    : `Eres el asistente de ContractIA, especializado en contratos de salud chilenos (isapres, seguros complementarios).
+    ? `Eres el asistente de Gotu, especializado en contratos de salud chilenos (isapres, seguros complementarios). Responde preguntas generales sobre salud en Chile de forma clara y en español. Si se incluye "Información normativa", úsala como fuente (GES, CAE, Ley Ricarte Soto, etc.). Si la pregunta menciona un código FONASA, interprétalo como código de prestación. Recomienda al usuario seleccionar un contrato para obtener respuestas específicas sobre sus coberturas.`
+    : `Eres el asistente de Gotu, especializado en contratos de salud chilenos (isapres, seguros complementarios).
 
 Tu trabajo es responder preguntas del usuario sobre sus contratos de salud de forma clara y en lenguaje simple.
 
